@@ -72,7 +72,7 @@ const loginUser = async (req, res) => {
 
 // Rolle ändern (nur Admin)
 const updateRole = async (req, res) => {
-    if (req.user.role !== "admin") {
+    if (req.user.role !== "Admin") {
         return res.status(403).json({ message: "Zugriff verweigert" });
     }
 

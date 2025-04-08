@@ -37,7 +37,7 @@ router.post(
 // Rolle ändern (nur Admin, daher auch authMiddleware davor)
 router.put("/update-role", authMiddleware, async (req, res) => {
     // Überprüfe, ob der Benutzer Admin ist
-    if (req.user.role !== "admin") {
+    if (req.user.role !== "Admin") {
         return res.status(403).json({ message: "Zugriff verweigert" });
     }
 
