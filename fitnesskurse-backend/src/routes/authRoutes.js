@@ -1,7 +1,7 @@
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const authController = require('../controllers/authController'); // Importiere den Controller
-const authMiddleware = require('../middleware/authMiddleware');  // Pfad zu deiner authMiddleware
+const { authenticateToken } = require('../middleware/authMiddleware');
 const { Pool } = require("pg");  // Füge die Pool-Instanz hinzu, falls sie gebraucht wird
 
 const router = express.Router();
@@ -35,7 +35,7 @@ router.post(
 );
 
 // Rolle ändern (nur Admin, daher auch authMiddleware davor)
-router.put("/update-role", authMiddleware, async (req, res) => {
+router.put("/update-role", authenticateToken, async (req, res) => {
     // Überprüfe, ob der Benutzer Admin ist
     if (req.user.role !== "Admin") {
         return res.status(403).json({ message: "Zugriff verweigert" });

@@ -1,22 +1,17 @@
 const jwt = require("jsonwebtoken");
 
-const authMiddleware = (req, res, next) => {
+const authenticateToken = (req, res, next) => {
     const token = req.header("Authorization");
+if (!token || !token.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Kein Token oder ungültiges Format, Zugriff verweigert" });
+}
+const tokenWithoutBearer = token.slice(7); // Entfernt "Bearer " (7 Zeichen)
 
-    if (!token) {
-        return res.status(401).json({ message: "Kein Token, Zugriff verweigert" });
-    }
-
-    const tokenWithoutBearer = token.replace("Bearer ", "");
 
     try {
         const decoded = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET);
-        
-        // Stelle sicher, dass der Benutzer korrekt im req.user gespeichert wird
         req.user = decoded;
-
-        console.log("Benutzer im req.user:", req.user); // Debugging-Ausgabe
-        
+        console.log("Benutzer im req.user:", req.user);
         next();
     } catch (error) {
         console.error("Fehler beim Verifizieren des Tokens:", error);
@@ -24,5 +19,20 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-module.exports = authMiddleware;
+// ⬇️ NEU: Rollenbasiertes Middleware-Feature
+const authorizeRole = (roles) => {
+    return (req, res, next) => {
+console.log("Benutzerrolle:", req.user.role); // Debugging: Logge die Benutzerrolle
+        if (!roles.includes(req.user.role)) {
+    return res.status(403).json({ message: `Zugriff verweigert für Rolle: ${req.user.role}` });
+}
+
+        next();
+    };
+};
+
+module.exports = {
+    authenticateToken,
+    authorizeRole
+};
 

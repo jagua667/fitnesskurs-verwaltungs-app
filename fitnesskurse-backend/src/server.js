@@ -29,9 +29,17 @@ pool.connect()
 app.use(express.json());
 app.use(cors());
 
+// Authentifizierungs- und Rollen-Middleware importieren
+const { authenticateToken, authorizeRole } = require('./middleware/authMiddleware');
+
 // Fitnesskurs-Routen
 const fitnessKursRoutes = require("./routes/fitnessKursRoutes");
 app.use("/api/fitnesskurse", fitnessKursRoutes);
+
+//Kurs-Routen
+const courseRoutes = require('./routes/courseRoutes');
+app.use('/api/courses', courseRoutes);
+
 
 // Authentifizierungs-Routen
 const authRoutes = require("./routes/authRoutes"); // Importiere die Authentifizierungsrouten

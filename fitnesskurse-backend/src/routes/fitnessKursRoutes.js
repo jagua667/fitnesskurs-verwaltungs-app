@@ -1,12 +1,12 @@
 const express = require("express");
 const { pool } = require("../server");  // pool aus server.js importieren
-const authMiddleware = require("../middleware/authMiddleware");
+const { authenticateToken, authorizeRole } = require("../middleware/authMiddleware");
 const checkRole = require("../middleware/roleMiddleware");
 
 const router = express.Router();
 
 // **Fitnesskurs erstellen (Nur für Admins & Trainer)**
-router.post("/", authMiddleware, checkRole("Admin", "Trainer"), async (req, res) => {
+router.post("/", authenticateToken, checkRole("Admin", "Trainer"), async (req, res) => {
     const { title, description, start_time, end_time, location, max_capacity, trainer_id } = req.body;
 
     try {
@@ -22,7 +22,7 @@ router.post("/", authMiddleware, checkRole("Admin", "Trainer"), async (req, res)
 });
 
 // **Fitnesskurs löschen (Nur für Admins)**
-router.delete("/:id", authMiddleware, checkRole("Admin"), async (req, res) => {
+router.delete("/:id", authenticateToken, checkRole("Admin"), async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -40,7 +40,7 @@ router.delete("/:id", authMiddleware, checkRole("Admin"), async (req, res) => {
 });
 
 // **Fitnesskurs aktualisieren (Nur für Admins & Trainer)**
-router.put("/:id", authMiddleware, checkRole("Admin", "Trainer"), async (req, res) => {
+router.put("/:id", authenticateToken, checkRole("Admin", "Trainer"), async (req, res) => {
     const { id } = req.params;
     const { title, description, start_time, end_time, location, max_capacity, trainer_id } = req.body;
 
