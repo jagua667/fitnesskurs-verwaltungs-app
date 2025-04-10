@@ -40,6 +40,9 @@ app.use("/api/fitnesskurse", fitnessKursRoutes);
 const courseRoutes = require('./routes/courseRoutes');
 app.use('/api/courses', courseRoutes);
 
+//Booking-Routen
+const bookingRoutes = require('./routes/bookingRoutes');
+app.use('/api/bookings', bookingRoutes);
 
 // Authentifizierungs-Routen
 const authRoutes = require("./routes/authRoutes"); // Importiere die Authentifizierungsrouten
