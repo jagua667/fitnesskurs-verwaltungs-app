@@ -44,6 +44,10 @@ app.use('/api/courses', courseRoutes);
 const bookingRoutes = require('./routes/bookingRoutes');
 app.use('/api/bookings', bookingRoutes);
 
+//Ratings-Routen
+const ratingsRouter = require('./routes/ratings'); // Die Route für Bewertungen
+app.use('/api/ratings', ratingsRouter); // Alle Routen aus ratings.js unter /api/ratings
+
 // Authentifizierungs-Routen
 const authRoutes = require("./routes/authRoutes"); // Importiere die Authentifizierungsrouten
 app.use("/api/auth", authRoutes); // Routen für Registrierung und Login unter /api/auth
