@@ -1,3 +1,4 @@
+const { Parser } = require('json2csv');
 const pool = require('../db'); // Verbindung zur Datenbank
 
 exports.getAllCourses = async (req, res) => {
@@ -91,3 +92,25 @@ exports.deleteCourse = async (req, res) => {
   }
 };
 
+exports.exportCourses = async (req, res) => {
+  try {
+    // Holen der Kursdaten aus der Datenbank
+    const result = await pool.query('SELECT * FROM courses');
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Keine Kurse gefunden.' });
+    }
+
+    // Umwandlung der JSON-Daten in CSV
+    const json2csvParser = new Parser();
+    const csv = json2csvParser.parse(result.rows);
+
+    // Setze Header für den Download
+    res.header('Content-Type', 'text/csv');
+    res.attachment('courses.csv');
+    res.send(csv); // CSV-Daten als Antwort senden
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Fehler beim Exportieren der Kurse.' });
+  }
+};

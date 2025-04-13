@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const authenticate = require('../middleware/authMiddleware.js'); // JWT Middleware
-const { getRatingsByCourseId } = require('../controllers/ratingsController'); // Controller für Bewertungen
+const ratingsController = require('../controllers/ratingsController');
 
 // Bewertung erstellen oder aktualisieren
 router.post('/', authenticate.authenticateToken, async (req, res) => {
@@ -66,5 +66,15 @@ router.get('/course/:courseId/average', async (req, res) => {
     res.status(500).json({ error: 'Serverfehler' });
   }
 });
+
+// Endpunkt zum Abrufen der Bewertungen eines Kurses
+router.get('/ratings/:courseId', authenticate.authenticateToken, ratingsController.getRatingsByCourseId);
+
+// Endpunkt zum Exportieren der Bewertungen eines Kurses als CSV
+router.get('/export/:courseId', authenticate.authenticateToken, (req, res) => {
+  console.log('Export Route Aufgerufen!'); // Debugging-Log
+  ratingsController.exportRatings(req, res);
+});
+
 
 module.exports = router;

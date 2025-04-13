@@ -1,4 +1,4 @@
-require('dotenv').config({ path: '../.env' }); // Pfad zur .env Datei im übergeordneten Verzeichnis
+require('dotenv').config(); 
 
 const express = require("express");
 const cors = require("cors");
@@ -39,6 +39,10 @@ app.use("/api/fitnesskurse", fitnessKursRoutes);
 //Kurs-Routen
 const courseRoutes = require('./routes/courseRoutes');
 app.use('/api/courses', courseRoutes);
+
+// bodyParser-Routen
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
 
 //Booking-Routen
 const bookingRoutes = require('./routes/bookingRoutes');
