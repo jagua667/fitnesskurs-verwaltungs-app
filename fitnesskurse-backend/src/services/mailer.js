@@ -1,38 +1,71 @@
-
+// src/services/mailer.js
 const nodemailer = require('nodemailer');
+require('dotenv').config();
 
-// Erstelle einen Transporter, um E-Mails zu versenden
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // Hier kannst du auch einen anderen E-Mail-Dienst verwenden
+  service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER, // Deine E-Mail-Adresse, aus der die Mails versendet werden
-    pass: process.env.EMAIL_PASS, // Dein Passwort oder App-Passwort (bei Gmail z.B.)
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
-// Funktion als Promise
-const sendEmail = (to, subject, text) => {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: to,
-    subject: subject,
-    text: text,
-  };
-
-  // Versprechen zurückgeben
-  return new Promise((resolve, reject) => {
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.error('❌ Fehler beim Senden der E-Mail:', error);
-        reject(error);
-      } else {
-        console.log('📧 E-Mail gesendet:', info.response);
-        resolve(info);
-      }
-    });
-  });
+const sendEmail = async (to, subject, text) => {
+  try {
+    const mailOptions = {
+      from: `"Fitnesskurse" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      text,
+    };
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.error('❌ E-Mail-Fehler:', error);
+  }
 };
 
 
-module.exports = { sendEmail }; 
+// Füge dies in deiner mailer.js oben oder unten ein
+const testEmail = 'claudia.niederhofer1804@gmail.com';  // Deine eigene Gmail-Adresse
+
+// Test-Mail senden
+sendEmail(testEmail, 'Testmail', 'Das ist ein Test aus meiner App');
+
+
+// 📧 Funktionen für verschiedene Mails
+const formatBookingText = (data) => (
+  `Hallo ${data.name},\n\n` +
+  `Du hast den Kurs "${data.course}" am ${data.date} um ${data.time} Uhr mit Trainer ${data.trainer} erfolgreich gebucht.\n\n` +
+  `Sportliche Grüße,\nDein Fitness-Team`
+);
+
+const formatTrainerBookingText = (data) => (
+  `Trainer-Info:\n\n` +
+  `${data.user} hat sich für deinen Kurs "${data.course}" am ${data.date} um ${data.time} Uhr angemeldet.`
+);
+
+const formatCancellationText = (data) => (
+  `Hallo ${data.name},\n\n` +
+  `Du hast deine Buchung für den Kurs "${data.course}" am ${data.date} um ${data.time} Uhr storniert.\n\n` +
+  `Sportliche Grüße,\nDein Fitness-Team`
+);
+
+const formatTrainerCancellationText = (data) => (
+  `Trainer-Info:\n\n` +
+  `${data.user} hat den Kurs "${data.course}" am ${data.date} um ${data.time} Uhr abgesagt.`
+);
+
+module.exports = {
+  sendBookingEmailToCustomer: (to, data) =>
+    sendEmail(to, 'Buchungsbestätigung', formatBookingText(data)),
+
+  sendBookingEmailToTrainer: (to, data) =>
+    sendEmail(to, 'Neue Buchung für deinen Kurs', formatTrainerBookingText(data)),
+
+  sendCancellationEmailToCustomer: (to, data) =>
+    sendEmail(to, 'Stornierungsbestätigung', formatCancellationText(data)),
+
+  sendCancellationEmailToTrainer: (to, data) =>
+    sendEmail(to, 'Stornierung deines Kurses', formatTrainerCancellationText(data)),
+};
 

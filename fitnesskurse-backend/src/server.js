@@ -41,8 +41,9 @@ app.use("/api/fitnesskurse", fitnessKursRoutes);
 const courseRoutes = require('./routes/courseRoutes');
 app.use('/api/courses', courseRoutes);
 
-//Booking-Routen
+
 const bookingRoutes = require('./routes/bookingRoutes');
+console.log("📦 bookingRoutes geladen"); 
 app.use('/api/bookings', bookingRoutes);
 
 //Ratings-Routen
