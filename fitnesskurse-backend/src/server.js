@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
+const { bookCourse, cancelBooking } = require('./controllers/bookingController');
 
 console.log("🔥 Server wird gestartet!");
 const app = express(); // ✅ App wird hier zuerst erstellt
@@ -39,10 +40,6 @@ app.use("/api/fitnesskurse", fitnessKursRoutes);
 //Kurs-Routen
 const courseRoutes = require('./routes/courseRoutes');
 app.use('/api/courses', courseRoutes);
-
-// bodyParser-Routen
-const bodyParser = require('body-parser');
-app.use(bodyParser.json());
 
 //Booking-Routen
 const bookingRoutes = require('./routes/bookingRoutes');
