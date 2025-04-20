@@ -1,5 +1,5 @@
 const express = require("express");
-const { pool } = require("../server");  // pool aus server.js importieren
+const { pool } = require("../db");  // pool aus db.js importieren
 const { authenticateToken, authorizeRole } = require("../middleware/authMiddleware");
 const checkRole = require("../middleware/roleMiddleware");
 
