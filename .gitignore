@@ -1,0 +1,13 @@
+# Office-Dokumente
+*.odt
+*.pdf
+
+# Temporäre/Lock-Dateien von LibreOffice
+.~lock.*
+
+# Sonstige Dateien
+Database_Befehle
+
+# Den client-Ordner auslassen (falls du ihn bald löschst)
+client/
+
