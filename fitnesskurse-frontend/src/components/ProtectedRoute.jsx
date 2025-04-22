@@ -1,17 +1,29 @@
 // ProtectedRoute.jsx
 import React from "react";
-import { Route, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("authToken");
 
-  // Wenn kein Token vorhanden ist, leite zum Login weiter
   if (!token) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
-  // Falls Token vorhanden, zeige die geschützte Komponente (children)
-  return children;
+  try {
+    const decoded = jwtDecode(token);
+    const isExpired = decoded.exp < Date.now() / 1000;
+
+    if (isExpired) {
+      localStorage.removeItem("authToken");
+      return <Navigate to="/login" replace />;
+    }
+
+    return children;
+  } catch (error) {
+    console.error("Ungültiges Token", error);
+    return <Navigate to="/login" replace />;
+  }
 };
 
 export default ProtectedRoute;

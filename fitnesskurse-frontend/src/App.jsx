@@ -1,37 +1,35 @@
 // App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Sidebar from "./components/Sidebar";
-import Footer from "./components/Footer";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./components/Auth/Login";
-import Register from "./components/Auth/Register";
-import DashboardAdmin from "./components/Dashboard/DashboardAdmin";
-import DashboardTrainer from "./components/Dashboard/DashboardTrainer";
-import DashboardKunde from "./components/Dashboard/DashboardKunde";
-import Kurse from "./components/Kurse/Kurse";
-import Bewertung from "./components/Bewertung/Bewertung";
-import Kalender from "./components/Kalender/Kalender";
+import { Routes, Route } from "react-router-dom";
+import { Navbar, Sidebar, Footer, ProtectedRoute } from "./components";
+import Login from "./pages/Auth/Login";
+import Logout from "./pages/Auth/Logout"; 
+import Register from "./pages/Auth/Register";
+import Admin from "./pages/Dashboard/Admin";
+import Trainer from "./pages/Dashboard/Trainer";
+import Kunde from "./pages/Dashboard/Kunde";
+import Kurse from "./pages/Kurse";
+import Bewertung from "./pages/Bewertung";
+import Kalender from "./pages/Kalender";
 
 function App() {
   return (
-    <Router>
+    <>
       <Navbar />
       <div className="container">
         <Sidebar />
         <div className="content">
           <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+           <Route path="/" element={<Login />} />
+           <Route path="/login" element={<Login />} />
+           <Route path="/register" element={<Register />} />
 
            {/* Protected Routes */}
             <Route
               path="/dashboard/admin"
               element={
                 <ProtectedRoute>
-                  <DashboardAdmin />
+                  <Admin />
                 </ProtectedRoute>
               }
             />
@@ -39,7 +37,7 @@ function App() {
               path="/dashboard/trainer"
               element={
                 <ProtectedRoute>
-                  <DashboardTrainer />
+                  <Trainer />
                 </ProtectedRoute>
               }
             />
@@ -47,7 +45,7 @@ function App() {
               path="/dashboard/kunde"
               element={
                 <ProtectedRoute>
-                  <DashboardKunde />
+                  <Kunde />
                 </ProtectedRoute>
               }
             />
@@ -55,14 +53,23 @@ function App() {
 
 
             {/* Weitere Routen */}
-            <Route path="/kurse" element={<Kurse />} />
-            <Route path="/bewertung" element={<Bewertung />} />
-            <Route path="/kalender" element={<Kalender />} />
+            <Route path="/kurse" element={<ProtectedRoute>
+      <Kurse />
+    </ProtectedRoute>} />
+            <Route path="/bewertung" element={<ProtectedRoute>
+      <Bewertung />
+    </ProtectedRoute>} />
+            <Route path="/kalender" element={<ProtectedRoute>
+      <Kalender />
+    </ProtectedRoute>} />
+
+            {/* Logout Route */}
+            <Route path="/logout" element={<Logout />} />
           </Routes>
         </div>
       </div>
       <Footer />
-    </Router>
+    </>
   );
 }
 
