@@ -1,5 +1,6 @@
 const express = require("express");
-const { pool } = require("../db");  // pool aus db.js importieren
+const pool = require("../db");  // pool aus db.js importieren
+console.log('pool ist:', pool); // DEBUG
 const { authenticateToken, authorizeRole } = require("../middleware/authMiddleware");
 const checkRole = require("../middleware/roleMiddleware");
 
@@ -19,7 +20,7 @@ router.post("/", authenticateToken, checkRole("Admin", "Trainer"), async (req, r
         console.error('Fehler beim Erstellen des Fitnesskurses:', error.message);
         res.status(500).json({ error: "Fehler beim Erstellen des Fitnesskurses." });
     }
-});
+}); 
 
 // **Fitnesskurs löschen (Nur für Admins)**
 router.delete("/:id", authenticateToken, checkRole("Admin"), async (req, res) => {
