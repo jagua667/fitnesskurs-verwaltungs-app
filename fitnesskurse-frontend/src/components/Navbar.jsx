@@ -1,9 +1,10 @@
 // components/Navbar.jsx
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const token = localStorage.getItem("authToken");
 
   // Falls kein Token vorhanden ist, wird die Navigation ohne bestimmte Links angezeigt
@@ -31,7 +32,12 @@ const Navbar = () => {
     return null; // Falls der Token ungültig ist, wird nichts angezeigt
   }
 
-  // Wenn der Benutzer eingeloggt ist, zeige diese Links an
+  // Logout-Handler
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");  // Entfernt das Token aus localStorage
+    navigate("/login");  // Weiterleitung zur Login-Seite
+  };
+
   return (
     <nav className="navbar">
       <ul className="nav-links">
@@ -51,8 +57,8 @@ const Navbar = () => {
           <li><NavLink to="/dashboard/kunde">Kunden Dashboard</NavLink></li>
         )}
 
-        {/* Logout-Link für eingeloggte Benutzer */}
-        <li><NavLink to="/logout">Logout</NavLink></li>
+        {/* Logout-Button für eingeloggte Benutzer */}
+        <li><button onClick={handleLogout}>Logout</button></li>
       </ul>
     </nav>
   );
