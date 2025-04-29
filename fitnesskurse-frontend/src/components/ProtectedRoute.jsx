@@ -1,30 +1,23 @@
-// ProtectedRoute.jsx
-import React from "react";
-import { Navigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+// components/ProtectedRoute.jsx
+import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // AuthContext verwenden
 
-const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem("authToken");
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { user } = useAuth();  // Benutzer aus AuthContext holen
 
-  if (!token) {
+  // Wenn kein Benutzer eingeloggt ist, zum Login weiterleiten
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  try {
-    const decoded = jwtDecode(token);
-    console.log(decoded);
-    const isExpired = decoded.exp < Date.now() / 1000;
-
-    if (isExpired) {
-      localStorage.removeItem("authToken");
-      return <Navigate to="/login" replace />;
-    }
-
-    return children;
-  } catch (error) {
-    console.error("Ungültiges Token", error);
-    return <Navigate to="/login" replace />;
+  // Wenn der Benutzer nicht die erlaubte Rolle hat, eine Unauthorized-Seite anzeigen
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/unauthorized" replace />;
   }
+
+  // Wenn der Benutzer eingeloggt ist und die richtige Rolle hat, den Inhalt rendern
+  return children;
 };
 
 export default ProtectedRoute;

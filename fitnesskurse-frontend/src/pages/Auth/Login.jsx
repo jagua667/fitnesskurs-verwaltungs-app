@@ -6,96 +6,81 @@ import { jwtDecode } from 'jwt-decode';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);  // Zustand für Fehler
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Wenn der Benutzer bereits eingeloggt ist, weiterleiten
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        const currentTime = Date.now() / 1000;
-
-        if (decoded.exp < currentTime) {
+        if (decoded.exp < Date.now() / 1000) {
           localStorage.removeItem('authToken');
           return;
         }
 
         // Weiterleitung basierend auf der Rolle
-        switch (decoded.role) {
-          case 'Admin':
-            navigate('/dashboard/admin');
-            break;
-          case 'Trainer':
-            navigate('/dashboard/trainer');
-            break;
-          case 'Kunde':
-            navigate('/dashboard/kunde');
-            break;
-          default:
-            console.warn('Unbekannte Rolle:', decoded.role);
-            break;
+        if (decoded.role.toLowerCase() === "kunde") {
+          navigate("/kurse"); // Kunde soll direkt zu Kurse
+        } else {
+          const roleBasedRedirect = {
+            admin: '/dashboard/admin',
+            trainer: '/dashboard/trainer',
+          };
+          navigate(roleBasedRedirect[decoded.role.toLowerCase()] || '/');
         }
       } catch (err) {
         console.error('Token konnte nicht dekodiert werden:', err);
+        localStorage.removeItem('authToken'); // Sicherheit: Ungültigen Token entfernen
       }
     }
   }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);  // Fehler zurücksetzen
+    setError(null);
+    setIsLoading(true);
 
     try {
       const response = await axios.post('/api/auth/login', { email, password });
 
       const token = response.data.token;
-      
-      // Token speichern
       localStorage.setItem('authToken', token);
-
-      // Token decodieren
+      
       const decoded = jwtDecode(token);
-      const currentTime = Date.now() / 1000;
-
-      // Gültigkeit des Tokens prüfen
-      if (decoded.exp < currentTime) {
+      if (decoded.exp < Date.now() / 1000) {
         setError('Die Sitzung ist abgelaufen. Bitte erneut einloggen.');
+        localStorage.removeItem('authToken');
         return;
       }
 
-      // Weiterleitung basierend auf der Rolle
-      switch (decoded.role) {
-        case 'Admin':
-          navigate('/dashboard/admin');
-          break;
-        case 'Trainer':
-          navigate('/dashboard/trainer');
-          break;
-        case 'Kunde':
-          navigate('/dashboard/kunde');
-          break;
-        default:
-          setError('Unbekannte Benutzerrolle.');
-          break;
+      // ✅ Erfolgreicher Login -> Redirect nach Rolle
+      if (decoded.role.toLowerCase() === "kunde") {
+        navigate("/kurse");
+      } else {
+        const roleBasedRedirect = {
+          admin: '/dashboard/admin',
+          trainer: '/dashboard/trainer',
+        };
+        navigate(roleBasedRedirect[decoded.role.toLowerCase()] || '/');
       }
     } catch (error) {
       console.error('Fehler beim Login', error);
       setError('Login fehlgeschlagen. Überprüfen Sie Ihre Anmeldedaten.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="login-page" style={{ padding: '2rem', maxWidth: '500px', margin: 'auto' }}>
-      {/* 🏠 Startseiten-Teil */}
       <h1>Willkommen zur Fitnesskurs-Verwaltung</h1>
       <p>
         Bitte logge dich ein, um deine Kurse zu verwalten, Buchungen vorzunehmen
         oder dein persönliches Dashboard zu sehen.
       </p>
 
-      {/* 🔐 Login-Formular */}
       <form onSubmit={handleSubmit}>
         <div>
           <input
@@ -116,12 +101,13 @@ const Login = () => {
           />
         </div>
         {error && <div style={{ color: 'red' }}>{error}</div>}
-        <button type="submit">Login</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Bitte warten...' : 'Login'}
+        </button>
       </form>
     </div>
   );
 };
 
 export default Login;
-
 

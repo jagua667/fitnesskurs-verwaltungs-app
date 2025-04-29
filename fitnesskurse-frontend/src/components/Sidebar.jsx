@@ -1,42 +1,94 @@
-// components/Sidebar.jsx
 import React from "react";
-import { Link } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import {
+  Box,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
+import { NavLink } from "react-router-dom";
+
+// Icons
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import PersonIcon from "@mui/icons-material/Person";
+import LogoutIcon from "@mui/icons-material/Logout";
+import ClassIcon from "@mui/icons-material/Class";
+
+// Import AuthContext
+import { useAuth } from "../context/AuthContext";
+
+const drawerWidth = 240;
 
 const Sidebar = () => {
-  const token = localStorage.getItem("authToken");
+  const { user, loading } = useAuth();
+  console.log("Sidebar user:", user);
 
-  if (!token) return null; // Falls kein Token vorhanden ist, wird keine Sidebar angezeigt
-
-  let role = null;
-  try {
-    const decoded = jwtDecode(token);
-    role = decoded.role; // Rolle des Benutzers aus dem Token
-  } catch (error) {
-    console.error("Ungültiges Token", error);
-    return null; // Falls der Token ungültig ist, wird keine Sidebar angezeigt
+  if (loading || !user) {
+    return null;
   }
 
   return (
-    <div className="sidebar">
-      <ul>
-        {/* Zeige nur das Admin-Dashboard an, wenn der Benutzer ein Admin ist */}
-        {role === "admin" && (
-          <li><Link to="/dashboard/admin">Admin Dashboard</Link></li>
-        )}
+    <Box
+      sx={{
+        width: drawerWidth,
+        height: "100vh",
+        backgroundColor: "#f5f7fa",
+        color: "#333",
+        position: "fixed",
+        left: 0,
+        top: 0,
+        pt: 10,
+        boxSizing: "border-box",
+        borderRight: "1px solid #ddd",
+      }}
+    >
+      <List>
+        {/* Menüpunkt für alle Nutzer */}
+        <ListItemButton component={NavLink} to="/kurse" sx={navItemStyle}>
+          <ListItemIcon sx={iconStyle}><ClassIcon /></ListItemIcon>
+          <ListItemText primary="Kurse" />
+        </ListItemButton>
 
-        {/* Zeige nur das Trainer-Dashboard an, wenn der Benutzer ein Trainer ist */}
-        {role === "trainer" && (
-          <li><Link to="/dashboard/trainer">Trainer Dashboard</Link></li>
-        )}
+        {/* Nur für Kunden */}
+        {user.role === "kunde" && (
+          <>
+            <ListItemButton component={NavLink} to="/meine-buchungen" sx={navItemStyle}>
+              <ListItemIcon sx={iconStyle}><CalendarTodayIcon /></ListItemIcon>
+              <ListItemText primary="Buchungen" />
+            </ListItemButton>
 
-        {/* Zeige nur das Kunden-Dashboard an, wenn der Benutzer ein Kunde ist */}
-        {role === "kunde" && (
-          <li><Link to="/dashboard/kunde">Kunden Dashboard</Link></li>
+            <ListItemButton component={NavLink} to="/profil" sx={navItemStyle}>
+              <ListItemIcon sx={iconStyle}><PersonIcon /></ListItemIcon>
+              <ListItemText primary="Mein Profil" />
+            </ListItemButton>
+
+            <ListItemButton component={NavLink} to="/logout" sx={navItemStyle}>
+              <ListItemIcon sx={iconStyle}><LogoutIcon /></ListItemIcon>
+              <ListItemText primary="Logout" />
+            </ListItemButton>
+          </>
         )}
-      </ul>
-    </div>
+      </List>
+    </Box>
   );
+};
+
+const navItemStyle = {
+  "&.active": {
+    backgroundColor: "#1976d2",
+    color: "#fff",
+    "& .MuiListItemIcon-root": {
+      color: "#fff",
+    },
+  },
+  "&:hover": {
+    backgroundColor: "#e3f2fd",
+  },
+};
+
+const iconStyle = {
+  color: "#1976d2",
+  minWidth: 36,
 };
 
 export default Sidebar;
