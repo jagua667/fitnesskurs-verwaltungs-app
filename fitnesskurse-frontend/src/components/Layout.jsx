@@ -2,11 +2,28 @@ import React from "react";
 import { Box } from "@mui/material";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
+import { useAuth } from '../context/AuthContext'; 
 
 const drawerWidth = 240; // ← Sidebar-Breite
 const navbarHeight = 64; // ← Höhe der Navbar
 
 const Layout = ({ children }) => {
+  const { user } = useAuth();
+  const menuItemsByRole = {
+    kunde: [
+      { label: "Kurse", path: "/kurse" },
+      { label: "Meine Buchungen", path: "/meine-buchungen" },
+      { label: "Logout", path: "/logout" },
+    ],
+    trainer: [
+      { label: "Dashboard", path: "/dashboard/trainer" },
+      { label: "Kurse", path: "/kurse" },
+      { label: "Kalender", path: "/kalender" },
+      { label: "Logout", path: "/logout" },
+    ],
+  };
+  const menuItems = menuItemsByRole[user?.role] || [];
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       {/* Navbar oben */}
@@ -14,7 +31,8 @@ const Layout = ({ children }) => {
 
       {/* Sidebar + Hauptinhalt */}
       <Box sx={{ display: "flex", flexGrow: 1 }}>
-        <Sidebar />
+        <Sidebar menuItems={menuItems} />
+
 
         {/* Hauptinhalt, mit Abstand zur Sidebar & Navbar */}
         <Box
