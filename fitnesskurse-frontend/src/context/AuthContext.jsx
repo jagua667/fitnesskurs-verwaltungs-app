@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     setTimeout(() => {
       // Mock-User für Testzwecke, kannst du später mit einem echten Backend ersetzen
-      const mockUser = { role: 'kunde', name: 'Anna', id: 1 };
+      const mockUser = { role: 'trainer', name: 'Ottmar', id: 1 };
       setUser(mockUser); // Benutzer setzen
       setLoading(false); // Lade-Status auf fertig setzen
     }, 1000); // Mock Verzögerung von 1 Sekunde

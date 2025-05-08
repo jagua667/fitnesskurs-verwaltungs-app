@@ -1,85 +1,102 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext"; // AuthProvider importieren
+import { AuthProvider } from "./context/AuthContext";
 import Layout from "./components/Layout";
-import Login from "./pages/Auth/Login";
+import AuthPage from "./pages/Auth/AuthPage";
 import Logout from "./pages/Auth/Logout";
 import Register from "./pages/Auth/Register";
 import Admin from "./pages/Dashboard/Admin";
-import Trainer from "./pages/Dashboard/Trainer";
+import TrainerDashboard from "./pages/Dashboard/TrainerDashboard";
 import Kunde from "./pages/Dashboard/Kunde";
 import Kurse from "./pages/Kurse";
 import Bewertung from "./pages/Bewertung";
 import Kalender from "./pages/Kalender";
+import MeineBuchungen from "./pages/MeineBuchungen";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
-    <AuthProvider> {/* AuthProvider um die App wickeln */}
+    <AuthProvider>
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/register" element={<AuthPage />} />
+        <Route path="/logout" element={<Logout />} />
 
-        {/* Protected Routes with Layout Wrapper */}
+        {/* Fehlerseite für unberechtigte Zugriffe */}
+        <Route path="/unauthorized" element={<div>Keine Berechtigung</div>} />
+
+        {/* Admin-Dashboard */}
         <Route
           path="/dashboard/admin"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <Layout>
-                <Admin /> {/* Admin-Dashboard */}
+                <Admin />
               </Layout>
             </ProtectedRoute>
           }
         />
+
+        {/* Trainer-Dashboard */}
         <Route
           path="/dashboard/trainer"
           element={
-            <ProtectedRoute allowedRoles={["trainer"]}>
               <Layout>
-                <Trainer /> {/* Trainer-Dashboard */}
+                <TrainerDashboard />
+              </Layout>
+          }
+        />
+
+        {/* Kunden-Dashboard (wenn gewünscht) */}
+        <Route
+          path="/dashboard/kunde"
+          element={
+            <ProtectedRoute allowedRoles={["kunde"]}>
+              <Layout>
+                <Kunde />
               </Layout>
             </ProtectedRoute>
           }
         />
-      <Route
-  path="/kurse"
-  element={
-    <ProtectedRoute allowedRoles={["kunde", "admin", "trainer"]}>
-      <Kurse />
-    </ProtectedRoute>
-  }
-/>
 
-
-        {/* Weitere geschützte Routen */}
+        {/* Gemeinsame Seiten */}
         <Route
           path="/kurse"
           element={
-            <ProtectedRoute allowedRoles={["kunde", "admin", "trainer"]}>
+            <ProtectedRoute allowedRoles={["admin", "trainer", "kunde"]}>   <Layout>
               <Kurse />
+   </Layout>
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/meine-buchungen"
+          element={
+            <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
+              <MeineBuchungen />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/bewertung"
           element={
-            <ProtectedRoute allowedRoles={["kunde", "trainer"]}>
+            <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
               <Bewertung />
             </ProtectedRoute>
           }
         />
+
         <Route
-          path="/kurse"
+          path="/kalender"
           element={
-            <ProtectedRoute allowedRoles={["admin", "trainer"]}>
-              <Kurse />
+            <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
+              <Kalender />
             </ProtectedRoute>
           }
         />
-
-        {/* Logout Route */}
-        <Route path="/logout" element={<Logout />} />
       </Routes>
     </AuthProvider>
   );

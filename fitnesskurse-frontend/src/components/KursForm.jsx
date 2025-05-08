@@ -8,8 +8,11 @@ const KursForm = ({ open, onClose, kurs, onSave }) => {
 
   // Aktualisiere formData, wenn sich kurs ändert
   useEffect(() => {
-    setFormData(kurs || defaultData);
-  }, [kurs]);
+  setFormData({
+    ...defaultData,
+    ...(kurs || {}),
+  });
+}, [kurs]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,7 +77,8 @@ const KursForm = ({ open, onClose, kurs, onSave }) => {
           fullWidth
           margin="normal"
           name="maxParticipantCount"
-          value={formData.maxParticipantCount}
+          type="number"
+          value={formData.maxParticipantCount ?? ""}
           onChange={handleChange}
         />
         <TextField

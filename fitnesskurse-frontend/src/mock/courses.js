@@ -1,6 +1,4 @@
-// src/mock/courses.js
-
-const mockCourses = [
+export const mockCourses = [
   {
     id: 1,
     name: "Yoga für Anfänger",
@@ -8,6 +6,8 @@ const mockCourses = [
     date: "2025-05-01",
     time: "10:30 - 11:30",
     room: "Raum 2",
+    trainer: "Julia",
+ teilnehmer: ["Lena", "Tim", "Fabian", "Nora", "Tobias"]
   },
   {
     id: 4,
@@ -16,6 +16,8 @@ const mockCourses = [
     date: "2025-05-01",
     time: "09:00 - 10:00",
     room: "Raum 1",
+trainer: "Ottmar",
+ teilnehmer: ["Lena", "Tim", "Fabian", "Nora", "Tobias", "Claudia"]
   },
   {
     id: 5,
@@ -24,9 +26,21 @@ const mockCourses = [
     date: "2025-05-01",
     time: "10:30 - 11:30",
     room: "Raum 2",
+trainer: "Pep",
+teilnehmer: ["Mira", "Jonas", "Sophie"]
   },
   // Weitere Kurse hier...
 ];
 
-export default mockCourses;
+export const mappedEvents = mockCourses.map(course => ({
+  id: course.id,
+  title: course.name,
+  start: course.date + 'T' + course.time.split(' - ')[0], 
+  end: course.date + 'T' + course.time.split(' - ')[1], 
+  room: course.room,
+  extendedProps: {
+    teilnehmer: course.teilnehmer,
+  },
+}));
+
 
