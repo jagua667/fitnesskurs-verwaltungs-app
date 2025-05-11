@@ -22,8 +22,8 @@ const renderStars = (rating) => {
   );
 };
 
-const BuchungItem = ({ buchung, onCancel, isPast, onBewerten }) => {
-  if (!buchung) return null;
+const BookingItem = ({ booking, onCancel, isPast, onRate }) => {
+  if (!booking) return null;
 
   return (
     <ListItem
@@ -33,7 +33,7 @@ const BuchungItem = ({ buchung, onCancel, isPast, onBewerten }) => {
             <IconButton
               edge="end"
               aria-label="stornieren"
-              onClick={() => onCancel(buchung.id, buchung.kurs)}
+              onClick={() => onCancel(booking.id, booking.course)}
               sx={{ color: 'error.main', fontSize: '2rem' }}
             >
               <DeleteIcon sx={{ fontSize: 'inherit' }} />
@@ -51,7 +51,7 @@ const BuchungItem = ({ buchung, onCancel, isPast, onBewerten }) => {
       <ListItemText
         primary={
           <Typography variant="subtitle1" fontWeight="bold">
-            {buchung.kurs}
+            {booking.course}
           </Typography>
         }
         secondaryTypographyProps={{ component: 'div' }}
@@ -59,12 +59,12 @@ const BuchungItem = ({ buchung, onCancel, isPast, onBewerten }) => {
           <Box display="flex" flexDirection="column">
             <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'flex', alignItems: 'center' }}>
               <EventIcon sx={{ mr: 0.5, fontSize: 'inherit', verticalAlign: 'middle' }} />
-              {buchung.datum} • {buchung.zeit}
+              {booking.date} • {booking.zeit}
             </Typography>
 
             <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'flex', alignItems: 'center' }}>
               <LocationOnIcon sx={{ mr: 0.5, fontSize: 'inherit', verticalAlign: 'middle' }} />
-              {buchung.ort}
+              {booking.location}
             </Typography>
 
             <Box mt={0.5}>
@@ -74,12 +74,12 @@ const BuchungItem = ({ buchung, onCancel, isPast, onBewerten }) => {
             </Box>
             {!isPast && (
               <Box mt={1}>
-                <Chip label={buchung.status} color="success" size="small" />
+                <Chip label={booking.status} color="success" size="small" />
               </Box>
             )}
             {isPast && (
               <Box mt={1}>
-                <button onClick={() => onBewerten(buchung)} style={{ background: '#eee', border: 'none', padding: '6px 12px', cursor: 'pointer' }}>
+                <button onClick={() => onRate(booking)} style={{ background: '#eee', border: 'none', padding: '6px 12px', cursor: 'pointer' }}>
                   Kurs bewerten
                 </button>
               </Box>
@@ -91,5 +91,5 @@ const BuchungItem = ({ buchung, onCancel, isPast, onBewerten }) => {
   );
 };
 
-export default BuchungItem;
+export default BookingItem;
 

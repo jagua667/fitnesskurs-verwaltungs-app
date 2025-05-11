@@ -7,11 +7,9 @@ import Logout from "./pages/Auth/Logout";
 import Register from "./pages/Auth/Register";
 import Admin from "./pages/Dashboard/Admin";
 import TrainerDashboard from "./pages/Dashboard/TrainerDashboard";
-import Kunde from "./pages/Dashboard/Kunde";
-import Kurse from "./pages/Kurse";
-import Bewertung from "./pages/Bewertung";
-import Kalender from "./pages/Kalender";
-import MeineBuchungen from "./pages/MeineBuchungen";
+import Courses from "./pages/Courses";
+import Rating from "./pages/Rating";
+import MyBookings from "./pages/MyBookings";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -48,52 +46,32 @@ function App() {
           }
         />
 
-        {/* Kunden-Dashboard (wenn gewünscht) */}
+        {/* Kurse, die Kundinnen und Kunden buchen können (war: "admin", "trainer", "kunde")*/}
         <Route
-          path="/dashboard/kunde"
+          path="/courses"
           element={
             <ProtectedRoute allowedRoles={["kunde"]}>
-              <Layout>
-                <Kunde />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Gemeinsame Seiten */}
-        <Route
-          path="/kurse"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "trainer", "kunde"]}>   <Layout>
-              <Kurse />
-   </Layout>
+             <Layout>
+              <Courses />
+             </Layout>
             </ProtectedRoute>
           }
         />
 
         <Route
-          path="/meine-buchungen"
+          path="/my-bookings"
           element={
             <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
-              <MeineBuchungen />
+              <MyBookings />
             </ProtectedRoute>
           }
         />
 
         <Route
-          path="/bewertung"
+          path="/rating"
           element={
             <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
-              <Bewertung />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/kalender"
-          element={
-            <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
-              <Kalender />
+              <Rating />
             </ProtectedRoute>
           }
         />

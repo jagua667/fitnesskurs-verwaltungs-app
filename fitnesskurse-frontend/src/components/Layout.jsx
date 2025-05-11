@@ -11,14 +11,14 @@ const Layout = ({ children }) => {
   const { user } = useAuth();
   const menuItemsByRole = {
     kunde: [
-      { label: "Kurse", path: "/kurse" },
-      { label: "Meine Buchungen", path: "/meine-buchungen" },
+      { label: "Kurse", path: "/courses" },
+      { label: "Meine Buchungen", path: "/my-bookings" },
       { label: "Logout", path: "/logout" },
     ],
     trainer: [
       { label: "Dashboard", path: "/dashboard/trainer" },
-      { label: "Kurse", path: "/kurse" },
-      { label: "Kalender", path: "/kalender" },
+      { label: "Kurse", path: "/courses" },
+      { label: "Kalender", path: "/calendar" },
       { label: "Logout", path: "/logout" },
     ],
   };

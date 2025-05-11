@@ -3,16 +3,16 @@ import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button } 
 
 const defaultData = { name: '', description: '', date: '', time: '', room: '', trainer: '', maxParticipantCount: '' };
 
-const KursForm = ({ open, onClose, kurs, onSave }) => {
-  const [formData, setFormData] = useState(kurs || defaultData);
+const CourseForm = ({ open, onClose, course, onSave }) => {
+  const [formData, setFormData] = useState(course || defaultData);
 
-  // Aktualisiere formData, wenn sich kurs ändert
+  // Aktualisiere formData, wenn sich course ändert
   useEffect(() => {
   setFormData({
     ...defaultData,
-    ...(kurs || {}),
+    ...(course || {}),
   });
-}, [kurs]);
+}, [course]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,7 +29,7 @@ const KursForm = ({ open, onClose, kurs, onSave }) => {
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>{kurs ? "Kurs bearbeiten" : "Kurs erstellen"}</DialogTitle>
+      <DialogTitle>{course ? "Kurs bearbeiten" : "Kurs erstellen"}</DialogTitle>
       <DialogContent>
         <TextField
           label="Kursname"
@@ -102,5 +102,5 @@ const KursForm = ({ open, onClose, kurs, onSave }) => {
   );
 };
 
-export default KursForm;
+export default CourseForm;
 

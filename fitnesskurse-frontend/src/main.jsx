@@ -1,5 +1,6 @@
 console.log("main.jsx wurde geladen!");
 
+import '@fontsource/roboto';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';

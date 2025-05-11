@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Bewertung = () => {
+const Rating = () => {
   return (
     <div>
       <h2>Bewertungen</h2>
@@ -9,5 +9,5 @@ const Bewertung = () => {
   );
 };
 
-export default Bewertung;
+export default Rating;
 

@@ -4,17 +4,17 @@ import {
 } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 
-const BewertungDialog = ({ open, onClose, kurs }) => {
+const RatingDialog = ({ open, onClose, course }) => {
   const [rating, setRating] = useState(0);
 
-  const handleBewerten = () => {
-    console.log(`Kurs ${kurs.kurs} mit ${rating} Sternen bewertet.`);
+  const handleRating = () => {
+    console.log(`Kurs ${course.course} mit ${rating} Sternen bewertet.`);
     onClose(); // später: API-Aufruf + Snackbar
   };
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Kurs bewerten: {kurs?.kurs}</DialogTitle>
+      <DialogTitle>Kurs bewerten: {course?.course}</DialogTitle>
       <DialogContent>
         <Typography>Wie viele Sterne gibst du dem Kurs?</Typography>
         <Box mt={2} display="flex" gap={1}>
@@ -30,11 +30,11 @@ const BewertungDialog = ({ open, onClose, kurs }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Abbrechen</Button>
-        <Button onClick={handleBewerten} disabled={rating === 0}>Bewerten</Button>
+        <Button onClick={handleRating} disabled={rating === 0}>Bewerten</Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default BewertungDialog;
+export default RatingDialog;
 

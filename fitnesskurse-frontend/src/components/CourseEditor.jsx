@@ -1,14 +1,15 @@
+// src/components/CourseEditor.jsx (war: KursVerwaltung)
 import React from 'react';
 import { Box, Button } from '@mui/material';
-import KursItem from './KursItem';  // Zeigt einzelne Kurse an
+import CourseItem from './CourseItem';  // Zeigt einzelne Kurse an
 
-const KursVerwaltung = ({ courses, onEdit, onDelete }) => {
+const CourseEditor = ({ courses, onEdit, onDelete }) => {
   return (
     <Box>
       {courses.map(course => (
-        <KursItem
+        <CourseItem
           key={course.id}
-          kurs={course}
+          course={course}
           onEdit={onEdit}
           onDelete={onDelete}
         />
@@ -24,5 +25,5 @@ const KursVerwaltung = ({ courses, onEdit, onDelete }) => {
   );
 };
 
-export default KursVerwaltung;
+export default CourseEditor;
 

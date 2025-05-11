@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 
-const KursStatistiken = ({ courses }) => {
+const CourseStatistics = ({ courses }) => {
   const totalCourses = courses.length;
   const averageRating = 4.2;  // Dummy-Bewertung, kann später dynamisch ermittelt werden
 
@@ -14,5 +14,5 @@ const KursStatistiken = ({ courses }) => {
   );
 };
 
-export default KursStatistiken;
+export default CourseStatistics;
 

@@ -3,8 +3,6 @@ import FullCalendar from '@fullcalendar/react'; // Import von FullCalendar für 
 import dayGridPlugin from '@fullcalendar/daygrid'; // Plugin für die Tagesansicht
 import { Tooltip, Dialog, DialogTitle, DialogContent, Typography, List, ListItem } from '@mui/material'; // MUI-Komponenten für das Dialog-Layout
 import { Global } from '@emotion/react'; // Globale CSS-Stile für FullCalendar
-import { mockCourses, mappedEvents } from '../mock/courses';
-
 
 // Globale Stile für FullCalendar, z.B. Umbrüche im Titel und Anpassungen der Event-Darstellung
 <Global styles={{
@@ -22,7 +20,7 @@ import { mockCourses, mappedEvents } from '../mock/courses';
   },
 }} />
 
-const KursKalender = ({ events }) => {
+const CourseCalendar = ({ events }) => {
   // Definieren von States für den Dialog und das ausgewählte Event
   const [dialogOpen, setDialogOpen] = useState(false); // Dialog sichtbar oder nicht
   const [selectedEvent, setSelectedEvent] = useState(null); // Speichert das ausgewählte Event
@@ -35,10 +33,10 @@ const KursKalender = ({ events }) => {
         height="auto" // Automatische Höhe des Kalenders
         events={events} // Übergibt die Event-Daten
         eventContent={(arg) => {
-          const raum = arg.event.extendedProps?.room || arg.event.room;
-          const teilnehmerAnzahl = arg.event.extendedProps?.teilnehmerAnzahl;
-          const teilnehmerListe = arg.event.extendedProps?.teilnehmer;
-          const teilnehmerZahl = teilnehmerAnzahl ?? (teilnehmerListe?.length ?? 0);
+          const room = arg.event.extendedProps?.room || arg.event.room;
+          const participantCount = arg.event.extendedProps?.participantCount;
+          const participantList = arg.event.extendedProps?.participant;
+          const teilnehmerZahl = participantCount ?? (participantList?.length ?? 0);
 
           return (
             <Tooltip title={arg.event.title}>
@@ -55,7 +53,7 @@ const KursKalender = ({ events }) => {
                   minute: '2-digit',
                 })} – {arg.event.title}
                 <br />
-                📍 {raum} · 👥 {teilnehmerZahl}
+                📍 {room} · 👥 {teilnehmerZahl}
               </div>
             </Tooltip>
           );
@@ -73,8 +71,8 @@ const KursKalender = ({ events }) => {
   <DialogContent>
     <Typography>Teilnehmer:</Typography>
     <List>
-      {selectedEvent?.extendedProps?.teilnehmer?.length > 0 ? (
-        selectedEvent?.extendedProps?.teilnehmer.map((name, idx) => (
+      {selectedEvent?.extendedProps?.participant?.length > 0 ? (
+        selectedEvent?.extendedProps?.participant.map((name, idx) => (
           <ListItem key={idx}>{name}</ListItem>
         ))
       ) : (
@@ -88,5 +86,5 @@ const KursKalender = ({ events }) => {
   );
 };
 
-export default KursKalender;
+export default CourseCalendar;
 

@@ -27,6 +27,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
 }
 
 h1 {
@@ -51,6 +52,12 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px solid #4d90fe; /* Beispiel-Farbe für den Fokus-Ring */
+}
+
+.calendar-day-label {
+  text-align: center;
+  font-weight: bold;
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
 }
 
 @media (prefers-color-scheme: light) {

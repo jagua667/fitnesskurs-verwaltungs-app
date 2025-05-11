@@ -25,18 +25,17 @@ import { useAuth } from "../context/AuthContext";
 const menuItemsByRole = {
   admin: [
     { label: 'Admin Dashboard', path: '/dashboard/admin', icon: <HomeIcon /> },
-    { label: 'Alle Kurse', path: '/dashboard/admin/kurse', icon: <ListIcon /> },
+    { label: 'Alle Kurse', path: '/dashboard/admin/courses', icon: <ListIcon /> },
     { label: 'Benutzerverwaltung', path: '/dashboard/admin/users', icon: <PeopleIcon /> },
-    { label: 'Statistiken', path: '/dashboard/admin/statistiken', icon: <BarChartIcon /> },
+    { label: 'Statistiken', path: '/dashboard/admin/statistics', icon: <BarChartIcon /> },
     { label: 'Export', path: '/dashboard/admin/export', icon: <DownloadIcon /> },
   ],
   trainer: [
     { label: 'Trainer Dashboard', path: '/dashboard/trainer', icon: <HomeIcon /> },
   ],
   kunde: [
-    { label: 'Meine Buchungen', path: '/dashboard/kunde', icon: <HomeIcon /> },
-    { label: 'Kalender', path: '/dashboard/kunde/kalender', icon: <CalendarMonthIcon /> },
-    { label: 'Bewertungen', path: '/dashboard/kunde/bewertungen', icon: <BarChartIcon /> },
+    { label: 'Kurse', path: '/courses', icon: <ListIcon /> },
+    { label: 'Meine Buchungen', path: '/my-bookings', icon: <CalendarMonthIcon /> },
   ],
 };
 
