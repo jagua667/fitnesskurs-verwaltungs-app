@@ -5,8 +5,8 @@ import {
   Typography,
   IconButton,
   Tooltip,
-  Chip,
   Box,
+  Button, // Für den Button
 } from '@mui/material';
 import {
   Delete as DeleteIcon,
@@ -27,20 +27,6 @@ const BookingItem = ({ booking, onCancel, isPast, onRate }) => {
 
   return (
     <ListItem
-      secondaryAction={
-        !isPast && (
-          <Tooltip title="Stornieren">
-            <IconButton
-              edge="end"
-              aria-label="stornieren"
-              onClick={() => onCancel(booking.id, booking.course)}
-              sx={{ color: 'error.main', fontSize: '2rem' }}
-            >
-              <DeleteIcon sx={{ fontSize: 'inherit' }} />
-            </IconButton>
-          </Tooltip>
-        )
-      }
       sx={{
         bgcolor: 'grey.50',
         borderRadius: 1,
@@ -59,7 +45,7 @@ const BookingItem = ({ booking, onCancel, isPast, onRate }) => {
           <Box display="flex" flexDirection="column">
             <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'flex', alignItems: 'center' }}>
               <EventIcon sx={{ mr: 0.5, fontSize: 'inherit', verticalAlign: 'middle' }} />
-              {booking.date} • {booking.zeit}
+              {booking.date} • {booking.time}
             </Typography>
 
             <Typography variant="body2" color="text.secondary" component="span" sx={{ display: 'flex', alignItems: 'center' }}>
@@ -72,14 +58,26 @@ const BookingItem = ({ booking, onCancel, isPast, onRate }) => {
                 4,0 {renderStars(4)} (35) {/* Platzhalter: 4 Sterne */}
               </Typography>
             </Box>
+            
+            {/* Entfernen der "Bestätigt"-Anzeige */}
             {!isPast && (
               <Box mt={1}>
-                <Chip label={booking.status} color="success" size="small" />
+                {/* Statt der "Bestätigt"-Anzeige, Button zum Stornieren */}
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => onCancel(booking.id)}
+                >
+                  Stornieren
+                </Button>
               </Box>
             )}
             {isPast && (
               <Box mt={1}>
-                <button onClick={() => onRate(booking)} style={{ background: '#eee', border: 'none', padding: '6px 12px', cursor: 'pointer' }}>
+                <button
+                  onClick={() => onRate(booking)}
+                  style={{ background: '#eee', border: 'none', padding: '6px 12px', cursor: 'pointer' }}
+                >
                   Kurs bewerten
                 </button>
               </Box>

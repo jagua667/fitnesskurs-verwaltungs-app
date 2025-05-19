@@ -1,4 +1,4 @@
-    import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions,  Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -7,33 +7,39 @@ import CourseItem from '../../components/CourseItem';
 import CourseForm from '../../components/CourseForm';
 import { mockCourses } from '../../mock/courses';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import StarRateIcon from '@mui/icons-material/StarRate';
+import StarIcon from '@mui/icons-material/Star'; // voller Stern
+import StarBorderIcon from '@mui/icons-material/StarBorder'; // leerer Stern
 
 const TrainerDashboard = () => {
   const [courses, setCourse] = useState(mockCourses);
   // TODO: warum confirmOpen UND formOpen? Frage dazu stellen
-    const [rating, setRating] = useState([
-      {
-        id: 1,
-        courseId: 1,
-        stars: 4,
-        comment: 'Super Kurs!',
-        user: 'Anna'
-      },
-      {
-        id: 2,
-        courseId: 4,
-        stars: 5,
-        comment: 'Sehr motivierend.',
-        user: 'Ben'
-      },
- {
-        id: 3,
-        courseId: 5,
-        stars: 3,
-        comment: 'Kurs war anstrengend.',
-        user: 'Ben'
-      },
-    ]);
+   const [rating, setRating] = useState([
+  {
+    id: 1,
+    courseId: 1,
+    stars: 4,
+    comment: 'Super Kurs!',
+    user: 'Anna',
+    date: new Date().toLocaleString() // Speichert das aktuelle Datum und Uhrzeit
+  },
+  {
+    id: 2,
+    courseId: 4,
+    stars: 5,
+    comment: 'Sehr motivierend.',
+    user: 'Ben',
+    date: new Date().toLocaleString()
+  },
+  {
+    id: 3,
+    courseId: 5,
+    stars: 3,
+    comment: 'Kurs war anstrengend.',
+    user: 'Ben',
+    date: new Date().toLocaleString()
+  }
+]);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState(null);
@@ -75,10 +81,16 @@ const durchschnittBewertung = rating.length
     setEditCourse(null);
   };
 
-  const calendarEvents = courses.map(k => ({
-  title: `${k.name}\n🕒 ${k.time} | 📍 ${k.room}\n👥 ${k.participant?.length ?? 0} Teilnehmer`,
-  date: k.date,
+ const calendarEvents = courses.map(k => ({
+  title: `${k.name}\n${k.time}`, // Kursname in Zeile 1, Uhrzeit in Zeile 2
+  start: k.date,
+  allDay: true,
+  extendedProps: {
+    room: k.room,
+    participant: k.teilnehmer || []
+  }
 }));
+
 const handleExport = () => {
   // --- Kurse ---
   const courseHeaders = ['ID', 'Name', 'Beschreibung', 'Datum', 'Uhrzeit', 'Ort', 'Teilnehmeranzahl'];
@@ -190,21 +202,32 @@ const chartData = courses.map(course => {
         onDelete={() => handleDeleteClick(k)}
       />
 
-      {courseRatings.length > 0 ? (
-        courseRatings.map((b) => (
-          <Box key={b.id} mb={2} mt={1} ml={2} p={2} border="1px solid #ddd" borderRadius={2}>
-            <Typography variant="subtitle1"><strong>Sterne:</strong> {b.stars}</Typography>
-            <Typography><strong>Kommentar:</strong> {b.comment}</Typography>
-            <Typography variant="caption"><strong>Von:</strong> {b.user}</Typography>
-          </Box>
-        ))
-      ) : (
-        <Typography variant="body2" color="textSecondary" ml={2}>
-          Keine Bewertungen für diesen Kurs vorhanden.
-        </Typography>
-      )}
-
-      {/* Wenn dies der letzte Kurs ist, dann Button einfügen */}
+     {courseRatings.length > 0 ? (
+  courseRatings.map((b) => (
+    <Box key={b.id} mb={2} mt={1} ml={2} p={2} border="1px solid #ddd" borderRadius={2}>
+      <Typography variant="subtitle1" display="flex" alignItems="center">
+        <strong>Sterne:</strong>
+        {Array.from({ length: 5 }, (_, i) =>
+          i < b.stars ? (
+            <StarIcon key={i} sx={{ color: '#fbc02d', ml: 0.5 }} />
+          ) : (
+            <StarBorderIcon key={i} sx={{ color: '#ccc', ml: 0.5 }} />
+          )
+        )}
+        <Typography component="span" sx={{ ml: 1 }}>({b.stars})</Typography>
+      </Typography>
+      <Typography variant="body2"><strong>Kommentar:</strong> {b.comment}</Typography>
+      <Typography variant="caption"><strong>Von:</strong> {b.user}</Typography>
+      <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+        <strong>Bewertungszeit:</strong> {b.date}
+      </Typography>
+    </Box>
+  ))
+) : (
+  <Typography variant="body2" color="textSecondary" ml={2} mb={3}>
+    Keine Bewertungen für diesen Kurs vorhanden.
+  </Typography>
+)}
       {index === courses.length - 1 && (
         <Button variant="contained" sx={{ mt: 2 }} onClick={() => { setFormOpen(true); setEditCourse(null); }}>
           Neuer Kurs
@@ -253,7 +276,7 @@ const chartData = courses.map(course => {
  </AccordionDetails>
   </Accordion>
 
-        <KursForm
+        <CourseForm
           open={formOpen}
           onClose={() => setFormOpen(false)}
           onSave={handleSave}
@@ -261,18 +284,17 @@ const chartData = courses.map(course => {
         />
 
         <Dialog open={confirmOpen} onClose={cancelDelete}>
-          <DialogTitle>Kurs löschen</DialogTitle>
-            <DialogContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <WarningAmberIcon color="warning" fontSize="large" />
-              <Typography>
-                Möchtest du den Kurs „{courseToDelete?.name}“ wirklich löschen?
-              </Typography>
-            </DialogContent>
-          <DialogActions>
-            <Button onClick={cancelDelete} color="primary">Abbrechen</Button>
-            <Button onClick={confirmDelete} color="error">Löschen</Button>
-          </DialogActions>
-        </Dialog>
+  <DialogTitle>Kurs löschen</DialogTitle>
+  <DialogContent>
+    <Typography>
+      Möchtest du den Kurs „{courseToDelete?.name}“ wirklich löschen?
+    </Typography>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={cancelDelete}>Abbrechen</Button>
+    <Button onClick={confirmDelete} color="error">Löschen</Button>
+  </DialogActions>
+</Dialog>
       </Box>
   );
 };

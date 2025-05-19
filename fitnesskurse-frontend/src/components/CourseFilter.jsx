@@ -7,7 +7,13 @@ import {
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 // Beispielwerte
-const times = ["10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
+const timeSlots = [
+  { label: "Vormittag", start: "08:00", end: "12:00" },
+  { label: "Mittag", start: "12:00", end: "14:00" },
+  { label: "Nachmittag", start: "14:00", end: "18:00" },
+  { label: "Abend", start: "18:00", end: "22:00" },
+];
+
 const studios = ["Fitnow Böblingen", "Fitnow Tübingen", "Fitnow Berlin_Lichtenberg"];
 const trainers = ["Jürgen", "Pep", "Ottmar", "Jennifer", "Alexia", "Emma"];
 
@@ -88,14 +94,16 @@ const CourseFilter = ({
         Zeiten
       </Typography>
       <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap" }}>
-        {times.map((time) => (
-          <ToggleButton
-            key={time}
-            label={time}
-            selected={filterTimes.includes(time)}
-            onClick={() => toggleItem(time, filterTimes, setFilterTimes)}
-          />
-        ))}
+
+       {timeSlots.map((slot) => (
+  <ToggleButton
+    key={slot.label}
+    label={slot.label}
+    selected={filterTimes.includes(slot.label)}
+    onClick={() => toggleItem(slot.label, filterTimes, setFilterTimes)}
+  />
+))}
+
       </Box>
 
       {/* Trainer */}

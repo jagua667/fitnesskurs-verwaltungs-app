@@ -18,6 +18,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import ClassIcon from "@mui/icons-material/Class";
 import PersonIcon from "@mui/icons-material/Person";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import StarRateIcon from '@mui/icons-material/StarRate';
 
 // Import AuthContext
 import { useAuth } from "../context/AuthContext";
@@ -27,8 +28,7 @@ const menuItemsByRole = {
     { label: 'Admin Dashboard', path: '/dashboard/admin', icon: <HomeIcon /> },
     { label: 'Alle Kurse', path: '/dashboard/admin/courses', icon: <ListIcon /> },
     { label: 'Benutzerverwaltung', path: '/dashboard/admin/users', icon: <PeopleIcon /> },
-    { label: 'Statistiken', path: '/dashboard/admin/statistics', icon: <BarChartIcon /> },
-    { label: 'Export', path: '/dashboard/admin/export', icon: <DownloadIcon /> },
+    { label: 'Neue Bewertungen', path: '/dashboard/admin/ratings', icon: <StarRateIcon /> },
   ],
   trainer: [
     { label: 'Trainer Dashboard', path: '/dashboard/trainer', icon: <HomeIcon /> },
@@ -41,7 +41,7 @@ const menuItemsByRole = {
 
 const drawerWidth = 240;
 const Sidebar = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   console.log("Sidebar user:", user);
 
   if (loading || !user) {
@@ -64,12 +64,21 @@ const menuItems = menuItemsByRole[user.role] || [];
       }}
     >
       <List>{menuItems.map(({ label, path, icon }) => (
-          <ListItemButton key={label} component={NavLink} to={path} sx={navItemStyle}>
+          <ListItemButton key={label} component={NavLink} to={path} end={path === '/dashboard/admin'} sx={navItemStyle}>
             <ListItemIcon sx={iconStyle}>{icon}</ListItemIcon>
             <ListItemText primary={label} />
           </ListItemButton>
         ))}
       </List>
+
+      <List>
+            <ListItemButton onClick={logout} sx={navItemStyle}>
+              <ListItemIcon sx={iconStyle}>
+                <LogoutIcon />
+              </ListItemIcon>
+              <ListItemText primary="Logout" />
+            </ListItemButton>
+   </List>
     </Box>
   );
 };

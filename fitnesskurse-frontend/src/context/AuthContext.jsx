@@ -1,29 +1,54 @@
-// context/AuthContext.jsx
+// src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
+import axios from '../api/axios';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // user = {role: 'kunde', name: 'Anna'}
-  const [loading, setLoading] = useState(true); // Lade-Status
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Simuliere das Laden eines Benutzers oder einen Login
+  const login = async (email, password) => {
+    try {
+      const res = await axios.post('/auth/login', { email, password });
+      localStorage.setItem('token', res.data.token); // ✅ Token speichern
+      setUser(res.data.user);                         // ✅ Benutzer setzen
+      return true;
+    } catch (err) {
+      console.error('Login fehlgeschlagen', err);
+      return false;
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+  };
+
+  // Bei Seiten-Neuladen: Token prüfen & user holen
   useEffect(() => {
-    setTimeout(() => {
-      // Mock-User für Testzwecke, kannst du später mit einem echten Backend ersetzen
-      const mockUser = { role: 'kunde', name: 'Max', id: 1 };
-      setUser(mockUser); // Benutzer setzen
-      setLoading(false); // Lade-Status auf fertig setzen
-    }, 1000); // Mock Verzögerung von 1 Sekunde
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await axios.get('/auth/me');
+        setUser(res.data); // Benutzer aus dem Token holen
+      } catch (err) {
+        console.error('Token ungültig oder abgelaufen');
+        localStorage.removeItem('token');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
-  // Falls noch geladen wird, kannst du hier ein Lade-Indikator ausgeben
-  if (loading) {
-    return <div>Loading...</div>; // Optional: Lade-Anzeige
-  }
-
-  const login = (userData) => setUser(userData);
-  const logout = () => setUser(null);
+  if (loading) return <div>Loading...</div>;
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
@@ -33,4 +58,3 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-

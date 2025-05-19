@@ -6,15 +6,20 @@ import {
   Menu,
   Paper,
   Rating,
+  Tooltip,
 } from "@mui/material";
 import { ArrowBack, ArrowForward } from "@mui/icons-material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { startOfWeek, addDays, format, isValid, addWeeks, subWeeks } from "date-fns";
-
+import { Button } from '@mui/material';
 import { mockCourses } from "../mock/courses";
 import CourseDialog from "../components/CourseDialog";
 import WeekPicker from "../components/WeekPicker";
 import CourseFilter from "../components/CourseFilter";
+import { differenceInWeeks } from 'date-fns';
+import ReviewsDialog from "../components/ReviewsDialog";
+
+const currentUserEmail = "test@example.com";
 
 const timeSlots = [
   { label: "Vormittag", start: "08:00", end: "12:00" },
@@ -23,13 +28,19 @@ const timeSlots = [
   { label: "Abend", start: "18:00", end: "22:00" },
 ];
 
+const handleRatingSubmit = (course, rating) => {
+  console.log(`Rating für ${course.name}: ${rating} Sterne`);
+};
+
 const Courses = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [ratingDialogCourse, setRatingDialogCourse] = useState(null);
   const [filterTimes, setFilterTimes] = useState([]);
   const [filterRooms, setFilterRooms] = useState([]);
   const [filterTrainers, setFilterTrainers] = useState([]);
+  const [reviewsDialogCourse, setReviewsDialogCourse] = useState(null);
 
   useEffect(() => {
     if (!selectedDate || !isValid(selectedDate)) {
@@ -47,14 +58,14 @@ const Courses = () => {
 
   const startOfSelectedWeek = startOfWeek(selectedDate, { weekStartsOn: 1 });
 
-    const weekDays = Array.from({ length: 7 }, (_, i) => {
-      const day = addDays(startOfSelectedWeek, i);
-      return {
-        label: day.toLocaleDateString("de-DE", { weekday: "short" }),
-        rawDate: format(day, "yyyy-MM-dd"),      // für Vergleiche
-        displayDate: format(day, "dd.MM.yyyy"),  // für UI-Anzeige
-      };
-    });
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const day = addDays(startOfSelectedWeek, i);
+    return {
+      label: day.toLocaleDateString("de-DE", { weekday: "short" }),
+      rawDate: format(day, "yyyy-MM-dd"),      // für Vergleiche
+      displayDate: format(day, "dd.MM.yyyy"),  // für UI-Anzeige
+    };
+  });
 
   // Sortiert die Kurse nach Zeit und dann Name
   const getCoursesByDayAndSlot = (dayStr, slot) => {
@@ -65,7 +76,17 @@ const Courses = () => {
         return start >= slot.start && start < slot.end;
       })
       .filter(course => {
-        const matchesTime = filterTimes.length > 0 ? filterTimes.includes(course.time) : true;
+        const courseStartTime = course.time.split(" - ")[0];
+        const matchesTime =
+          filterTimes.length > 0
+            ? filterTimes.some((label) => {
+              const slot = timeSlots.find((s) => s.label === label);
+              if (!slot) return false;
+              const [startTime] = course.time.split(" - ");
+              return startTime >= slot.start && startTime < slot.end;
+            })
+            : true;
+
         const matchesRoom = filterRooms.length > 0 ? filterRooms.includes(course.room) : true;
         const matchesTrainer = filterTrainers.length > 0 ? filterTrainers.includes(course.trainer) : true;
         return matchesTime && matchesRoom && matchesTrainer;
@@ -117,26 +138,26 @@ const Courses = () => {
 
       {/* Header-Zeile */}
       <Box sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
-          mb: 1,
-        }}>
-          {weekDays.map((day) => (
-            <Box key={day.rawDate} className="calendar-day-label">
-              {day.label}<br />{day.displayDate}
-            </Box>
-          ))}
+        display: "grid",
+        gridTemplateColumns: "repeat(7, 1fr)",
+        mb: 1,
+      }}>
+        {weekDays.map((day) => (
+          <Box key={day.rawDate} className="calendar-day-label">
+            {day.label}<br />{day.displayDate}
+          </Box>
+        ))}
       </Box>
 
       {/* Zeilen für Zeitslots */}
       {timeSlots.map(slot => (
         <Box key={slot.label} sx={{ mb: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-              <Box sx={{ flexGrow: 1, height: "1px", backgroundColor: "#ccc", mr: 1 }} />
-              <Typography variant="subtitle2" sx={{ whiteSpace: "nowrap", fontWeight: "bold" }}>
-                {slot.label}
-              </Typography>
-              <Box sx={{ flexGrow: 1, height: "1px", backgroundColor: "#ccc", ml: 1 }} />
+            <Box sx={{ flexGrow: 1, height: "1px", backgroundColor: "#ccc", mr: 1 }} />
+            <Typography variant="subtitle2" sx={{ whiteSpace: "nowrap", fontWeight: "bold" }}>
+              {slot.label}
+            </Typography>
+            <Box sx={{ flexGrow: 1, height: "1px", backgroundColor: "#ccc", ml: 1 }} />
           </Box>
           <Box
             sx={{
@@ -150,22 +171,29 @@ const Courses = () => {
               return (
                 <Box key={day.rawDate} sx={{ minHeight: "80px" }}>
                   {courses.map(course => (
-                    <Paper
-                      key={course.id}
-                      onClick={() => handleCourseClick(course)}
-                      sx={{
-                        p: 1,
-                        mb: 1,
-                        cursor: "pointer",
-                        backgroundColor: "#e3f2fd",
-                      }}
-                    >
-                      <Typography variant="subtitle2">{course.name}</Typography>
-                      <Rating value={course.rating} precision={0.1} readOnly size="small" />
-                      <Typography variant="body2">{course.time}</Typography>
-                      <Typography variant="body2">{course.trainer}</Typography>
-                      <Typography variant="body2">{course.room}</Typography>
-                    </Paper>
+                    <Tooltip key={course.id} title="Online buchen" arrow>
+                      <Paper
+
+                        onClick={() => handleCourseClick(course)}
+                        sx={{
+                          p: 1,
+                          mb: 1,
+                          cursor: "pointer",
+                          backgroundColor: "#e3f2fd",
+                        }}
+                      >
+                        <Typography variant="subtitle2">{course.name}</Typography>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <Rating value={course.rating} precision={0.1} readOnly size="small" />
+                          <Typography variant="caption" sx={{ whiteSpace: "nowrap" }}>
+                            ({course.reviews?.length || 0})
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2">{course.time}</Typography>
+                        <Typography variant="body2">{course.trainer}</Typography>
+                        <Typography variant="body2">{course.room}</Typography>
+                      </Paper>
+                    </Tooltip>
                   ))}
                 </Box>
               );
@@ -174,10 +202,32 @@ const Courses = () => {
         </Box>
       ))}
 
-      <CourseDialog course={selectedCourse} onClose={handleCloseDialog} />
+      <CourseDialog
+        course={selectedCourse}
+        onClose={() => setSelectedCourse(null)}
+        onShowReviews={(course) => setReviewsDialogCourse(course)}
+        onSubmitRating={(courseId, review) => {
+          setCourses(prev =>
+            prev.map(course => {
+              if (course.id === courseId) {
+                return {
+                  ...course,
+                  reviews: [...(course.reviews || []), review],
+                  ratedBy: [...(course.ratedBy || []), review.user]
+                };
+              }
+              return course;
+            })
+          );
+        }}
+      />
+      <ReviewsDialog
+        course={reviewsDialogCourse}
+        open={Boolean(reviewsDialogCourse)}
+        onClose={() => setReviewsDialogCourse(null)}
+      />
     </Box>
   );
 };
 
 export default Courses;
-

@@ -10,231 +10,218 @@ import {
   Tab,
   InputAdornment,
   IconButton,
-  Link,
   FormControlLabel,
   Checkbox,
-  FormControl,
+  FormLabel,
   RadioGroup,
   Radio,
-  FormLabel,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import axios from "../api/axios";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const AuthPage = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "Kunde",
+  });
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleTabChange = (_, newValue) => setTabIndex(newValue);
   const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
-  const handleRememberMeChange = (event) => setRememberMe(event.target.checked);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const { email, password } = formData;
+
+    const success = await login(email, password);
+    if (!success) {
+      alert("Login fehlgeschlagen");
+      return;
+    }
+
+    alert("Login erfolgreich!");
+    navigate("/dashboard"); // Optional: Weiterleiten
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    const { name, email, password, confirmPassword, role } = formData;
+
+    if (password !== confirmPassword) {
+      alert("Passwörter stimmen nicht überein.");
+      return;
+    }
+
+    try {
+      await axios.post("/auth/register", {
+        name,
+        email,
+        password,
+        role,
+      });
+
+      alert("Registrierung erfolgreich! Du kannst dich jetzt einloggen.");
+      setTabIndex(0); // Zurück zum Login
+    } catch (err) {
+      console.error("Registrierung fehlgeschlagen", err);
+      alert(
+        "Registrierung fehlgeschlagen: " +
+          (err.response?.data?.message || "Unbekannter Fehler")
+      );
+    }
+  };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        background: "linear-gradient(to right, #e3f2fd, #bbdefb)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        p: 2,
-      }}
-    >
-      <Card sx={{ maxWidth: 500, width: "100%", boxShadow: 4 }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
+      <Card sx={{ maxWidth: 450, width: "100%", boxShadow: 4 }}>
         <CardContent>
           <Typography variant="h4" align="center" gutterBottom>
             Willkommen bei Fitnow
           </Typography>
 
-          <Tabs value={tabIndex} onChange={handleTabChange} centered>
+          <Tabs value={tabIndex} onChange={handleTabChange} centered sx={{ mb: 2 }}>
             <Tab label="Login" />
             <Tab label="Registrieren" />
           </Tabs>
 
-          {tabIndex === 0 ? (
-            <>
-              <Box component="form" sx={{ mt: 3 }}>
-                <TextField
-                  label="E-Mail"
-                  type="email"
-                  fullWidth
-                  margin="normal"
-                  autoComplete="email"
-                />
-                <TextField
-                  label="Passwort"
-                  type={showPassword ? "text" : "password"}
-                  fullWidth
-                  margin="normal"
-                  autoComplete="current-password"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={togglePasswordVisibility} edge="end">
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                <FormControlLabel
-                  control={<Checkbox checked={rememberMe} onChange={handleRememberMeChange} color="primary" />}
-                  label="Angemeldet bleiben"
-                  sx={{ mt: 1 }}
-                />
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 2 }}>
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    sx={{ fontWeight: "bold", borderColor: "#4267B2", color: "#4267B2" }}
-                  >
-                    Mit Facebook anmelden
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    fullWidth
-                    sx={{ fontWeight: "bold", borderColor: "#DB4437", color: "#DB4437" }}
-                  >
-                    Mit Google anmelden
-                  </Button>
-                </Box>
-                <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
-                  <Link href="#" underline="hover" variant="body2">
-                    Passwort vergessen?
-                  </Link>
-                  <Link
-                    component="button"
-                    onClick={() => setTabIndex(1)}
-                    underline="hover"
-                    variant="body2"
-                  >
-                    Neu hier? Registrieren
-                  </Link>
-                </Box>
-                <Link href="#" underline="hover" variant="body2" sx={{ mt: 2, display: "block", textAlign: "center" }}>
-                  Hilfe / Support
-                </Link>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  fullWidth
-                  sx={{
-                    mt: 3,
-                    py: 1.5,
-                    fontWeight: "bold",
-                    background: "linear-gradient(to bottom, #64b5f6, #1976d2)",
-                    color: "#fff",
-                    "&:hover": {
-                      background: "linear-gradient(to bottom, #42a5f5, #1565c0)",
-                    },
-                  }}
-                >
-                  Einloggen
-                </Button>
-              </Box>
-            </>
-          ) : (
-            <>
-              <Box component="form" sx={{ mt: 3 }}>
-                <TextField
-                  label="Vorname"
-                  fullWidth
-                  margin="normal"
-                />
-                <TextField
-                  label="Nachname"
-                  fullWidth
-                  margin="normal"
-                />
-                <TextField
-                  label="E-Mail"
-                  type="email"
-                  fullWidth
-                  margin="normal"
-                  autoComplete="email"
-                />
-                <TextField
-                  label="Geburtsdatum"
-                  type="date"
-                  fullWidth
-                  margin="normal"
-                  InputLabelProps={{ shrink: true }}
-                />
-                <FormControl component="fieldset" margin="normal">
-                  <FormLabel component="legend">Geschlecht</FormLabel>
-                  <RadioGroup row defaultValue="other">
-                    <FormControlLabel value="female" control={<Radio />} label="Weiblich" />
-                    <FormControlLabel value="male" control={<Radio />} label="Männlich" />
-                    <FormControlLabel value="other" control={<Radio />} label="Divers" />
-                  </RadioGroup>
-                </FormControl>
-                <TextField
-                  label="Passwort"
-                  type={showPassword ? "text" : "password"}
-                  fullWidth
-                  margin="normal"
-                  autoComplete="new-password"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={togglePasswordVisibility} edge="end">
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                <TextField
-                  label="Passwort bestätigen"
-                  type={showPassword ? "text" : "password"}
-                  fullWidth
-                  margin="normal"
-                  autoComplete="new-password"
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={togglePasswordVisibility} edge="end">
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                <FormControlLabel
-                  control={<Checkbox color="primary" />}
-                  label={`Ich stimme den <Link href="#" target="_blank" rel="noopener noreferrer">AGB</Link> zu`}
-                  sx={{ mt: 2, display: "block" }}
-                />
-                <FormControlLabel
-                  control={<Checkbox color="primary" />}
-                  label={`Ich habe die <Link href="#" target="_blank" rel="noopener noreferrer">Datenschutzbestimmungen</Link> gelesen und akzeptiere sie`}
-                  sx={{ mt: 1, display: "block" }}
-                />
-                <TextField
-                  label="Rolle auswählen (z. B. Kunde, Trainer, Admin)"
-                  fullWidth
-                  margin="normal"
-                  placeholder="Kunde"
-                />
-                <Button
-                  variant="outlined"
-                  fullWidth
-                  sx={{
-                    mt: 3,
-                    py: 1.5,
-                    fontWeight: "bold",
-                    borderColor: "#1976d2",
-                    color: "#1976d2",
-                    "&:hover": {
-                      backgroundColor: "#e3f2fd",
-                      borderColor: "#1565c0",
-                    },
-                  }}
-                >
-                  Registrierung abschließen
-                </Button>
-              </Box>
-            </>
+          {tabIndex === 0 && (
+            <Box component="form" onSubmit={handleLogin}>
+              <TextField
+                label="E-Mail"
+                name="email"
+                type="email"
+                fullWidth
+                margin="normal"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+              <TextField
+                label="Passwort"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                fullWidth
+                margin="normal"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={togglePasswordVisibility} edge="end">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Button type="submit" variant="contained" fullWidth sx={{ mt: 2, py: 1.5 }}>
+                Einloggen
+              </Button>
+            </Box>
+          )}
+
+          {tabIndex === 1 && (
+            <Box component="form" onSubmit={handleRegister}>
+              <TextField
+                label="Name"
+                name="name"
+                fullWidth
+                margin="normal"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+              <TextField
+                label="E-Mail"
+                name="email"
+                type="email"
+                fullWidth
+                margin="normal"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+              <TextField
+                label="Passwort"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                fullWidth
+                margin="normal"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={togglePasswordVisibility} edge="end">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                label="Passwort bestätigen"
+                name="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                fullWidth
+                margin="normal"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={togglePasswordVisibility} edge="end">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+
+              <FormLabel sx={{ mt: 2 }}>Rolle auswählen</FormLabel>
+              <RadioGroup
+                row
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+              >
+                <FormControlLabel value="Kunde" control={<Radio />} label="Kunde" />
+                <FormControlLabel value="Trainer" control={<Radio />} label="Trainer" />
+                <FormControlLabel value="Admin" control={<Radio />} label="Admin" />
+              </RadioGroup>
+
+              <FormControlLabel
+                control={<Checkbox required />}
+                label="Ich stimme den AGB zu"
+                sx={{ mt: 2 }}
+              />
+              <FormControlLabel
+                control={<Checkbox required />}
+                label="Ich akzeptiere die Datenschutzbestimmungen"
+                sx={{ mt: 1 }}
+              />
+
+              <Button type="submit" variant="outlined" fullWidth sx={{ mt: 3, py: 1.5 }}>
+                Registrierung abschließen
+              </Button>
+            </Box>
           )}
         </CardContent>
       </Card>

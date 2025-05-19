@@ -5,15 +5,37 @@ import Layout from "./components/Layout";
 import AuthPage from "./pages/Auth/AuthPage";
 import Logout from "./pages/Auth/Logout";
 import Register from "./pages/Auth/Register";
-import Admin from "./pages/Dashboard/Admin";
+import AdminDashboard from "./pages/Dashboard/AdminDashboard";
 import TrainerDashboard from "./pages/Dashboard/TrainerDashboard";
 import Courses from "./pages/Courses";
 import Rating from "./pages/Rating";
 import MyBookings from "./pages/MyBookings";
 import ProtectedRoute from "./components/ProtectedRoute";
+import UserManagement from './pages/UserManagement';
+import CourseOverview from './pages/CourseOverview';
+import NewReviews from './pages/NewReviews';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',  // Hauptfarbe (blau)
+    },
+    secondary: {
+      main: '#f50057',  // Sekundärfarbe (pink)
+    },
+  },
+  typography: {
+    fontFamily: 'Arial, sans-serif',
+    h4: {
+      fontWeight: 700,
+    },
+  },
+});
 
 function App() {
   return (
+<ThemeProvider theme={theme}> 
     <AuthProvider>
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
@@ -28,11 +50,11 @@ function App() {
         <Route
           path="/dashboard/admin"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+          //  <ProtectedRoute allowedRoles={["admin"]}>
               <Layout>
-                <Admin />
+                <AdminDashboard />
               </Layout>
-            </ProtectedRoute>
+           // </ProtectedRoute>
           }
         />
 
@@ -46,15 +68,26 @@ function App() {
           }
         />
 
+        <Route 
+            path="/dashboard/admin/users" 
+            element={
+             <Layout>
+                  <UserManagement />
+             </Layout>
+            } 
+        />
+
+        <Route path="/admin/reviews" element={<Layout><NewReviews /></Layout>} />
+        <Route path="/dashboard/admin/courses" element={<Layout><CourseOverview /></Layout>} />
         {/* Kurse, die Kundinnen und Kunden buchen können (war: "admin", "trainer", "kunde")*/}
         <Route
           path="/courses"
           element={
-            <ProtectedRoute allowedRoles={["kunde"]}>
+          //  <ProtectedRoute allowedRoles={["kunde"]}>
              <Layout>
               <Courses />
              </Layout>
-            </ProtectedRoute>
+            //</ProtectedRoute>
           }
         />
 
@@ -62,7 +95,7 @@ function App() {
           path="/my-bookings"
           element={
             <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
-              <MyBookings />
+             <Layout> <MyBookings /></Layout>
             </ProtectedRoute>
           }
         />
@@ -70,13 +103,15 @@ function App() {
         <Route
           path="/rating"
           element={
-            <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
-              <Rating />
-            </ProtectedRoute>
+           // <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
+              <Layout><Rating /></Layout>
+            // </ProtectedRoute>
           }
         />
       </Routes>
     </AuthProvider>
+</ThemeProvider>
+
   );
 }
 
