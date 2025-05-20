@@ -35,82 +35,108 @@ const theme = createTheme({
 
 function App() {
   return (
-<ThemeProvider theme={theme}> 
-    <AuthProvider>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<AuthPage />} />
-        <Route path="/register" element={<AuthPage />} />
-        <Route path="/logout" element={<Logout />} />
+    <ThemeProvider theme={theme}>
+      <AuthProvider>
+        <Routes>
+          <Route path="*" element={<div>Seite nicht gefunden</div>} />
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/logout" element={<Logout />} />
 
-        {/* Fehlerseite für unberechtigte Zugriffe */}
-        <Route path="/unauthorized" element={<div>Keine Berechtigung</div>} />
+          {/* Fehlerseite für unberechtigte Zugriffe */}
+          <Route path="/unauthorized" element={<div>Keine Berechtigung</div>} />
 
-        {/* Admin-Dashboard */}
-        <Route
-          path="/dashboard/admin"
-          element={
-          //  <ProtectedRoute allowedRoles={["admin"]}>
-              <Layout>
-                <AdminDashboard />
-              </Layout>
-           // </ProtectedRoute>
-          }
-        />
-
-        {/* Trainer-Dashboard */}
-        <Route
-          path="/dashboard/trainer"
-          element={
-              <Layout>
-                <TrainerDashboard />
-              </Layout>
-          }
-        />
-
-        <Route 
-            path="/dashboard/admin/users" 
+          {/* Admin-Dashboard */}
+          <Route
+            path="/dashboard/admin"
             element={
-             <Layout>
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <Layout>
+                  <AdminDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Trainer-Dashboard */}
+          <Route
+            path="/dashboard/trainer"
+            element={
+              <ProtectedRoute allowedRoles={["trainer"]}>
+                <Layout>
+                  <TrainerDashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+
+          <Route
+            path="/dashboard/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <Layout>
                   <UserManagement />
-             </Layout>
-            } 
-        />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/admin/reviews" element={<Layout><NewReviews /></Layout>} />
-        <Route path="/dashboard/admin/courses" element={<Layout><CourseOverview /></Layout>} />
-        {/* Kurse, die Kundinnen und Kunden buchen können (war: "admin", "trainer", "kunde")*/}
-        <Route
-          path="/courses"
-          element={
-          //  <ProtectedRoute allowedRoles={["kunde"]}>
-             <Layout>
-              <Courses />
-             </Layout>
-            //</ProtectedRoute>
-          }
-        />
 
-        <Route
-          path="/my-bookings"
-          element={
-            <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
-             <Layout> <MyBookings /></Layout>
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/admin/reviews"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <Layout>
+                  <NewReviews />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/rating"
-          element={
-           // <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
-              <Layout><Rating /></Layout>
-            // </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </AuthProvider>
-</ThemeProvider>
+          <Route
+            path="/dashboard/admin/courses"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <Layout>
+                  <CourseOverview />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Kurse, die Kundinnen und Kunden buchen können (war: "admin", "trainer", "kunde")*/}
+          <Route
+            path="/courses"
+            element={
+              <ProtectedRoute allowedRoles={["kunde"]}>
+                <Layout>
+                  <Courses />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/my-bookings"
+            element={
+              <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
+                <Layout> <MyBookings /></Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/rating"
+            element={
+              <ProtectedRoute allowedRoles={["trainer", "kunde"]}>
+                <Layout><Rating /></Layout>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </AuthProvider>
+    </ThemeProvider>
 
   );
 }

@@ -2,7 +2,10 @@
 import axios from 'axios';
 
 const instance = axios.create({
-    baseURL: 'http://localhost:5000', // Passe das an dein Backend an
+    baseURL: 'http://localhost:5000/api', // Passe das an dein Backend an
+    headers: {
+        "Content-Type": "application/json",
+      },
 });
 
 // Interceptor: Token bei jedem Request anhängen

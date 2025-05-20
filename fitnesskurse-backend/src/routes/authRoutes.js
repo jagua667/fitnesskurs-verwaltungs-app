@@ -34,6 +34,6 @@ router.get("/me", authenticateToken, (req, res) => {
 });
 
 // PUT /auth/update-role – Rolle ändern (Admin)
-router.put("/update-role", authenticateToken, authController.updateUserRole);
+router.put("/update-role", authenticateToken, authController.updateRole);
 
 module.exports = router;

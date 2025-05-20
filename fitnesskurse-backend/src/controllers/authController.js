@@ -14,7 +14,8 @@ const pool = new Pool({
 
 // Registrierung eines neuen Benutzers
 const registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
+    const normalizedRole = role?.toLowerCase() || "kunde";
 
     try {
         // Prüfen, ob der Benutzer bereits existiert
@@ -28,8 +29,8 @@ const registerUser = async (req, res) => {
 
         // Benutzer in die Datenbank einfügen
         const newUser = await pool.query(
-            "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *",
-            [name, email, hashedPassword]
+            "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *",
+            [name, email, hashedPassword, normalizedRole]
         );
 
         res.status(201).json({ message: "Benutzer registriert", user: newUser.rows[0] });
@@ -43,33 +44,50 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
+    console.log("🔐 Loginversuch:");
+    console.log("Email:", email);
+    console.log("Passwort (eingegeben):", password);
+
     try {
-        // Benutzer suchen
         const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        console.log("User aus DB:", user.rows[0]);
+
         if (user.rows.length === 0) {
+            console.log("❌ Kein Benutzer gefunden.");
             return res.status(401).json({ message: "Ungültige Anmeldedaten" });
         }
 
-        // Passwort überprüfen
         const isMatch = await bcrypt.compare(password, user.rows[0].password);
+        console.log("Passwortvergleich:", isMatch);
+
         if (!isMatch) {
+            console.log("❌ Passwort stimmt nicht.");
             return res.status(401).json({ message: "Ungültige Anmeldedaten" });
         }
 
-        // JWT-Token erstellen
         const token = jwt.sign(
-            { id: user.rows[0].id, role: user.rows[0].role },
+            { id: user.rows[0].id, role: user.rows[0].role?.toLowerCase() },
             process.env.JWT_SECRET,
             { expiresIn: "1h" }
         );
 
-        res.json({ token });
+        console.log("✅ Login erfolgreich. Token wird zurückgegeben.");
+        res.json({
+            token,
+            user: {
+                id: user.rows[0].id,
+                name: user.rows[0].name,
+                email: user.rows[0].email,
+                role: user.rows[0].role?.toLowerCase(),
+            }
+        });
+
     } catch (error) {
-        console.error(error.message);
+        console.error("🔥 Serverfehler beim Login:", error.message);
         res.status(500).json({ message: "Serverfehler" });
     }
 };
-
+  
 // Rolle ändern (nur Admin)
 const updateRole = async (req, res) => {
     if (req.user.role !== "Admin") {

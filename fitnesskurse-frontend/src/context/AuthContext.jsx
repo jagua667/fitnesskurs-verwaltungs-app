@@ -11,14 +11,14 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const res = await axios.post('/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token); // ✅ Token speichern
-      setUser(res.data.user);                         // ✅ Benutzer setzen
+      localStorage.setItem('token', res.data.token);  // Speichere JWT
+      setUser(res.data.user);                         // Setze Benutzerzustand
       return true;
     } catch (err) {
-      console.error('Login fehlgeschlagen', err);
+      console.error('Login fehlgeschlagen:', err);
       return false;
     }
-  };
+  };  
 
   const logout = () => {
     localStorage.removeItem('token');

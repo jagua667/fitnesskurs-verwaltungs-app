@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -17,8 +17,7 @@ import {
   Radio,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import axios from "../api/axios";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const AuthPage = () => {
@@ -32,8 +31,19 @@ const AuthPage = () => {
     role: "Kunde",
   });
 
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+
+  // 🔁 Automatische Weiterleitung nach Login je nach Rolle
+  useEffect(() => {
+    if (user) {
+      const role = user.role.toLowerCase();
+      if (role === "admin") navigate("/dashboard/admin");
+      else if (role === "trainer") navigate("/dashboard/trainer");
+      else if (role === "kunde") navigate("/courses");
+      else navigate("/unauthorized");
+    }
+  }, [user, navigate]);
 
   const handleTabChange = (_, newValue) => setTabIndex(newValue);
   const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
@@ -43,18 +53,16 @@ const AuthPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ✅ Login mit Context + Fehlerbehandlung
   const handleLogin = async (e) => {
     e.preventDefault();
     const { email, password } = formData;
 
     const success = await login(email, password);
     if (!success) {
-      alert("Login fehlgeschlagen");
-      return;
+      alert("Login fehlgeschlagen: Bitte überprüfe deine Eingaben.");
     }
-
-    alert("Login erfolgreich!");
-    navigate("/dashboard"); // Optional: Weiterleiten
+    // Weiterleitung erfolgt automatisch über useEffect, sobald user gesetzt ist
   };
 
   const handleRegister = async (e) => {
@@ -75,13 +83,10 @@ const AuthPage = () => {
       });
 
       alert("Registrierung erfolgreich! Du kannst dich jetzt einloggen.");
-      setTabIndex(0); // Zurück zum Login
+      setTabIndex(0);
     } catch (err) {
       console.error("Registrierung fehlgeschlagen", err);
-      alert(
-        "Registrierung fehlgeschlagen: " +
-          (err.response?.data?.message || "Unbekannter Fehler")
-      );
+      alert("Registrierung fehlgeschlagen: " + (err.response?.data?.message || "Unbekannter Fehler"));
     }
   };
 
@@ -98,6 +103,7 @@ const AuthPage = () => {
             <Tab label="Registrieren" />
           </Tabs>
 
+          {/* ✅ Login-Formular */}
           {tabIndex === 0 && (
             <Box component="form" onSubmit={handleLogin}>
               <TextField
@@ -135,6 +141,7 @@ const AuthPage = () => {
             </Box>
           )}
 
+          {/* ✅ Registrierungsformular */}
           {tabIndex === 1 && (
             <Box component="form" onSubmit={handleRegister}>
               <TextField
