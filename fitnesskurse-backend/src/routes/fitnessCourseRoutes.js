@@ -7,23 +7,46 @@ const checkRole = require("../middleware/roleMiddleware");
 const router = express.Router();
 
 // **Fitnesskurs erstellen (Nur für Admins & Trainer)**
-router.post("/", authenticateToken, checkRole("Admin", "Trainer"), async (req, res) => {
+router.post("/", authenticateToken, checkRole("admin", "trainer"), async (req, res) => {
     const { title, description, start_time, end_time, location, max_capacity, trainer_id } = req.body;
 
     try {
-        const result = await pool.query(
-            "INSERT INTO courses (title, description, start_time, end_time, location, max_capacity, trainer_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-            [title, description, start_time, end_time, location, max_capacity, trainer_id]
-        );
+        router.post("/", authenticateToken, checkRole("admin", "trainer"), async (req, res) => {
+            const { title, description, start_time, end_time, location, max_capacity, trainer_id } = req.body;
+
+            try {
+                // 1️⃣ Trainer-Check einbauen:
+                const trainerCheck = await pool.query(
+                    "SELECT * FROM users WHERE id = $1 AND role = 'trainer'",
+                    [trainer_id]
+                );
+
+                if (trainerCheck.rows.length === 0) {
+                    return res.status(400).json({ error: "Ungültiger Trainer ausgewählt." });
+                }
+
+                // 2️⃣ Kurs speichern:
+                const result = await pool.query(
+                    "INSERT INTO courses (title, description, start_time, end_time, location, max_capacity, trainer_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+                    [title, description, start_time, end_time, location, max_capacity, trainer_id]
+                );
+
+                res.status(201).json(result.rows[0]);
+            } catch (error) {
+                console.error("Fehler beim Erstellen des Fitnesskurses:", error.message);
+                res.status(500).json({ error: "Fehler beim Erstellen des Fitnesskurses." });
+            }
+        });
+
         res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error('Fehler beim Erstellen des Fitnesskurses:', error.message);
         res.status(500).json({ error: "Fehler beim Erstellen des Fitnesskurses." });
     }
-}); 
+});
 
 // **Fitnesskurs löschen (Nur für Admins)**
-router.delete("/:id", authenticateToken, checkRole("Admin"), async (req, res) => {
+router.delete("/:id", authenticateToken, checkRole("admin"), async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -41,7 +64,7 @@ router.delete("/:id", authenticateToken, checkRole("Admin"), async (req, res) =>
 });
 
 // **Fitnesskurs aktualisieren (Nur für Admins & Trainer)**
-router.put("/:id", authenticateToken, checkRole("Admin", "Trainer"), async (req, res) => {
+router.put("/:id", authenticateToken, checkRole("admin", "trainer"), async (req, res) => {
     const { id } = req.params;
     const { title, description, start_time, end_time, location, max_capacity, trainer_id } = req.body;
 
@@ -67,22 +90,29 @@ router.put("/:id", authenticateToken, checkRole("Admin", "Trainer"), async (req,
 // **Alle Fitnesskurse abrufen**
 router.get('/', async (req, res) => {
     try {
-        console.log('Starte Abrufen der Kurse...'); // Debugging-Ausgabe
-        
-        const result = await pool.query('SELECT * FROM courses');
-        
-        if (result.rows.length === 0) {
-            console.log('Keine Kurse gefunden.'); // Debugging-Ausgabe
-            return res.status(404).json({ error: 'Keine Kurse gefunden.' });
-        }
-
-        console.log('Kurse erfolgreich abgerufen:', result.rows); // Debugging-Ausgabe
-        res.json(result.rows);
+      console.log('Starte Abrufen der Kurse...'); // Debugging-Ausgabe
+  
+      const result = await pool.query(`
+        SELECT 
+          c.*,
+          u.name AS trainer_name,
+          u.email AS trainer_email
+        FROM courses c
+        LEFT JOIN users u ON c.trainer_id = u.id
+      `);
+  
+      if (result.rows.length === 0) {
+        console.log('Keine Kurse gefunden.');
+        return res.status(404).json({ error: 'Keine Kurse gefunden.' });
+      }
+  
+      console.log('Kurse erfolgreich abgerufen:', result.rows);
+      res.json(result.rows);
     } catch (error) {
-        console.error('Fehler beim Abrufen der Fitnesskurse:', error.message); // Fehler ausgeben
-        res.status(500).json({ error: 'Fehler beim Abrufen der Fitnesskurse.' });
+      console.error('Fehler beim Abrufen der Fitnesskurse:', error.message);
+      res.status(500).json({ error: 'Fehler beim Abrufen der Fitnesskurse.' });
     }
-});
-
+  });
+  
 module.exports = router;
 

@@ -29,9 +29,9 @@ app.use(cors());
 // Authentifizierungs- und Rollen-Middleware importieren
 const { authenticateToken, authorizeRole } = require('./middleware/authMiddleware');
 
-// Fitnesskurs-Routen
-const fitnessKursRoutes = require("./routes/fitnessKursRoutes");
-app.use("/api/fitnesskurse", fitnessKursRoutes);
+// Fitnesskurs-Routen (TODO: Warum haben wir sowohl fitnesscourses as auch courses? Brauchen wir beide?)
+const fitnessCourseRoutes = require("./routes/fitnessCourseRoutes");
+app.use("/api/fitnesscourses", fitnessCourseRoutes);
 
 //Kurs-Routen
 const courseRoutes = require('./routes/courseRoutes');
