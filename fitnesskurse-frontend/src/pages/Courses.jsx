@@ -10,14 +10,14 @@ import {
 } from "@mui/material";
 import { ArrowBack, ArrowForward } from "@mui/icons-material";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { startOfWeek, addDays, format, isValid, addWeeks, subWeeks } from "date-fns";
+import { startOfWeek, addDays, format, isValid, addWeeks, subWeeks, parseISO } from "date-fns";
 import { Button } from '@mui/material';
-import { mockCourses } from "../mock/courses";
 import CourseDialog from "../components/CourseDialog";
 import WeekPicker from "../components/WeekPicker";
 import CourseFilter from "../components/CourseFilter";
 import { differenceInWeeks } from 'date-fns';
 import ReviewsDialog from "../components/ReviewsDialog";
+import axios from "axios";
 
 const currentUserEmail = "test@example.com";
 
@@ -32,6 +32,67 @@ const handleRatingSubmit = (course, rating) => {
   console.log(`Rating für ${course.name}: ${rating} Sterne`);
 };
 
+const expandRecurringCourses = (course) => {
+  const occurrences = [];
+
+  const start = new Date(course.start_time);
+  const end = new Date(course.end_time);
+
+  // Falls kein repeat gesetzt ist, normalen Kurs zurückgeben
+  if (course.repeat === 'none' || !course.repeat) {
+    return [mapCourse(course)];
+  }
+
+  const until = new Date(course.repeat_until);
+  let currentStart = new Date(start);
+  let currentEnd = new Date(end);
+
+  while (currentStart <= until) {
+    const repeatedCourse = {
+      ...course,
+      start_time: currentStart.toISOString(),
+      end_time: currentEnd.toISOString(),
+    };
+    occurrences.push(mapCourse(repeatedCourse));
+
+    // Für wöchentliche Wiederholung:
+    if (course.repeat === 'weekly') {
+      currentStart = addDays(currentStart, 7);
+      currentEnd = addDays(currentEnd, 7);
+    }
+  }
+
+  return occurrences;
+};
+
+
+const mapCourse = (course) => {
+  console.log("Original backend course:", course);
+  console.log(`Repeat: ${course.repeat}, Repeat Until: ${course.repeat_until}`);
+
+  let start_time = course.start_time;
+  let end_time = course.end_time;
+
+  if (!start_time && course.time && course.date) {
+    const [startStr, endStr] = course.time.split(" - ");
+    start_time = `${course.date}T${startStr}:00`;
+    end_time = `${course.date}T${endStr}:00`;
+  }
+
+  return {
+    ...course,
+    title: course.title || course.name || "Kein Titel",
+    start: start_time,
+    end: end_time,
+    location: course.location || "Unbekannter Ort",
+    trainer_name: course.trainer_name || "Unbekannter Trainer",
+    rating: parseFloat(course.average_rating) || null,
+    rating_count: course.rating_count || 0,
+    repeat: course.repeat || 'none',
+    repeat_until: course.repeat_until || null,
+  };
+};
+
 const Courses = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
@@ -41,12 +102,35 @@ const Courses = () => {
   const [filterRooms, setFilterRooms] = useState([]);
   const [filterTrainers, setFilterTrainers] = useState([]);
   const [reviewsDialogCourse, setReviewsDialogCourse] = useState(null);
+  const [courses, setCourses] = useState([]);
 
   useEffect(() => {
+    // Wenn selectedDate nicht gesetzt oder ungültig ist, auf Montag setzen
     if (!selectedDate || !isValid(selectedDate)) {
       const monday = startOfWeek(new Date(), { weekStartsOn: 1 });
       setSelectedDate(monday);
+      return; // Warte mit dem Laden der Kurse bis selectedDate gesetzt ist
     }
+
+    // Kurse vom Backend laden
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/courses");
+        let allCourses = [];
+
+        response.data.forEach(course => {
+          console.log("Original backend course:", course);
+          const expanded = expandRecurringCourses(course);
+          allCourses.push(...expanded);
+        });
+
+        setCourses(allCourses);
+      } catch (error) {
+        console.error("Fehler beim Laden der Kurse:", error);
+      }
+    };
+
+    fetchCourses();
   }, [selectedDate]);
 
   if (!selectedDate || !isValid(selectedDate)) return null;
@@ -67,36 +151,58 @@ const Courses = () => {
     };
   });
 
-  // Sortiert die Kurse nach Zeit und dann Name
   const getCoursesByDayAndSlot = (dayStr, slot) => {
-    return mockCourses
-      .filter(course => course.date === dayStr)
+    return courses
       .filter(course => {
-        const [start] = course.time.split(" - ");
-        return start >= slot.start && start < slot.end;
+        const date = new Date(course.start_time);
+        if (!isValid(date)) return false;
+
+        const courseDate = format(date, "yyyy-MM-dd");
+        return courseDate === dayStr;
       })
       .filter(course => {
-        const courseStartTime = course.time.split(" - ")[0];
-        const matchesTime =
-          filterTimes.length > 0
-            ? filterTimes.some((label) => {
-              const slot = timeSlots.find((s) => s.label === label);
-              if (!slot) return false;
-              const [startTime] = course.time.split(" - ");
-              return startTime >= slot.start && startTime < slot.end;
-            })
-            : true;
+        const date = new Date(course.start_time);
+        if (!isValid(date)) return false;
 
-        const matchesRoom = filterRooms.length > 0 ? filterRooms.includes(course.room) : true;
-        const matchesTrainer = filterTrainers.length > 0 ? filterTrainers.includes(course.trainer) : true;
+        const courseStartTime = format(date, "HH:mm");
+        return courseStartTime >= slot.start && courseStartTime < slot.end;
+      })
+      .filter(course => {
+        const date = new Date(course.start_time);
+        if (!isValid(date)) return false;
+
+        const courseStartTime = format(date, "HH:mm");
+
+        const matchesTime = filterTimes.length > 0
+          ? filterTimes.some(label => {
+            const slotObj = timeSlots.find(s => s.label === label);
+            if (!slotObj) return false;
+            return courseStartTime >= slotObj.start && courseStartTime < slotObj.end;
+          })
+          : true;
+
+        const matchesRoom = filterRooms.length > 0
+          ? filterRooms.includes(course.location ?? "")
+          : true;
+
+        const matchesTrainer = filterTrainers.length > 0
+          ? filterTrainers.includes(course.trainer_id ?? "")
+          : true;
+
         return matchesTime && matchesRoom && matchesTrainer;
       })
       .sort((a, b) => {
-        const aStart = a.time.split(" - ")[0];
-        const bStart = b.time.split(" - ")[0];
-        return aStart === bStart
-          ? a.name.localeCompare(b.name)
-          : aStart.localeCompare(bStart);
+        const aDate = new Date(a.start_time);
+        const bDate = new Date(b.start_time);
+        if (!isValid(aDate) || !isValid(bDate)) return 0;
+
+        const aTime = format(aDate, "HH:mm");
+        const bTime = format(bDate, "HH:mm");
+
+        if (aTime === bTime) {
+          return (a.title || '').localeCompare(b.title || '');
+        }
+        return aTime.localeCompare(bTime);
       });
   };
 
@@ -179,19 +285,60 @@ const Courses = () => {
                           p: 1,
                           mb: 1,
                           cursor: "pointer",
-                          backgroundColor: "#e3f2fd",
+                          backgroundColor: course.location === 'Fitnow Tübingen' ? '#c8e6c9' :
+                            course.location === 'Fitnow Berlin_Lichtenberg' ? '#bbdefb' :
+                              '#ffe0b2',
+                          transition: "background-color 0.3s",
+                          "&:hover": {
+                            backgroundColor: "#bbdefb",
+                          },
                         }}
                       >
-                        <Typography variant="subtitle2">{course.name}</Typography>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <Rating value={course.rating} precision={0.1} readOnly size="small" />
-                          <Typography variant="caption" sx={{ whiteSpace: "nowrap" }}>
-                            ({course.reviews?.length || 0})
+                        <Typography variant="subtitle1" fontWeight="bold">{course.title}</Typography>
+                        {course.rating !== null && course.rating !== undefined ? (
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Rating
+                              name={`rating-${course.id}`}
+                              value={Number(course.rating)}
+                              precision={0.5}
+                              readOnly
+                              size="small"
+                            />
+                            <Typography variant="body2" sx={{ ml: 1 }}>
+                              ({course.rating_count || 0})
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            Bewertung: Noch keine Bewertung
                           </Typography>
+                        )}
+
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mt: 0.5 }}>
+                          <Box>
+                            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: "bold" }}>
+                              Trainer:
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {course.trainer_name}
+                            </Typography>
+                          </Box>
+
+                          <Box>
+                            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: "bold" }}>
+                              Ort:
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {course.location}
+                            </Typography>
+                          </Box>
                         </Box>
-                        <Typography variant="body2">{course.time}</Typography>
-                        <Typography variant="body2">{course.trainer}</Typography>
-                        <Typography variant="body2">{course.room}</Typography>
+
+                        <Typography variant="body2" color="text.secondary">
+                          {format(parseISO(course.start_time), "HH:mm")} – {format(parseISO(course.end_time), "HH:mm")}
+                        </Typography>
+
+
                       </Paper>
                     </Tooltip>
                   ))}
