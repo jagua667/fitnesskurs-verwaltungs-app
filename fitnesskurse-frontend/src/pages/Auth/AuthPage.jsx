@@ -29,7 +29,7 @@ const AuthPage = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "Kunde",
+    role: "kunde",
   });
 
   const { login, user } = useAuth();

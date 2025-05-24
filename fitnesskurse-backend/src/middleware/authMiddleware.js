@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const authenticateToken = (req, res, next) => {
-    const token = req.header("Authorization");
+const token = req.headers.authorization || req.header("Authorization");
 if (!token || !token.startsWith("Bearer ")) {
     return res.status(401).json({ message: "Kein Token oder ungültiges Format, Zugriff verweigert" });
 }

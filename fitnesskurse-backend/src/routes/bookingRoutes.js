@@ -6,10 +6,10 @@ const { authenticateToken, authorizeRole } = require('../middleware/authMiddlewa
 const bookingController = require('../controllers/bookingController');
 
 // Kurs buchen (nur Kunde)
-router.post('/', authenticateToken, authorizeRole(['Kunde']), bookingController.bookCourse);
+router.post('/', authenticateToken, authorizeRole(['kunde']), bookingController.bookCourse);
 
 // Buchung stornieren (nur Kunde)
-router.delete('/:bookingId', authenticateToken, authorizeRole(['Kunde']), bookingController.cancelBooking);
+router.delete('/:bookingId', authenticateToken, authorizeRole(['kunde']), bookingController.cancelBooking);
 
 
 module.exports = router;

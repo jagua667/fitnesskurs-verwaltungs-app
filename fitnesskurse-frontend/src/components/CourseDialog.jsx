@@ -19,6 +19,8 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
+
 
   const studioName = course.studio || "FitNow Böblingen";
   const room = course.room || "Kursraum";
@@ -29,13 +31,21 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
   const mapsQuery = encodeURIComponent(course.address || `${addressStreet}, ${addressCity}`);
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
   const googleMapsApiKey = import.meta.env.VITE_REACT_APP_GOOGLE_MAPS_API_KEY;
+  console.log(`googleMapsApiKey: ${googleMapsApiKey}`);
 
-  const formattedDate = new Date(course.date).toLocaleDateString("de-DE", {
-    weekday: "long",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  console.log("course.start_time: ", course.start_time);
+  console.log("course.end_time: ", course.end_time);
+    const formattedDate = course.start_time
+      ? new Date(course.start_time).toLocaleDateString("de-DE", {
+          weekday: "long",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : "Datum nicht verfügbar";
+    const timeRange = course.start_time && course.end_time
+      ? `${new Date(course.start_time).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} - ${new Date(course.end_time).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}`
+      : course.time || "Uhrzeit nicht verfügbar";
 
   const handleSubmit = () => {
     if (!course || rating === 0) return;
@@ -50,6 +60,38 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
     onSubmitRating(course.id, review);
     setSubmitted(true);
   };
+
+    const handleBooking = async () => {
+      setIsBooking(true);
+      try {
+        const token = localStorage.getItem("token"); // oder wie du den Token speicherst
+        if (!token) {
+          alert("Bitte zuerst einloggen, um zu buchen.");
+          return;
+        }
+
+        const response = await fetch("/api/bookings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ courseId: course.id }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Buchung fehlgeschlagen.");
+        }
+
+        alert("🎉 Buchung erfolgreich!");
+        onClose(); // optional: Dialog schließen
+      } catch (err) {
+        alert("❌ Fehler bei der Buchung: " + err.message);
+      }
+      setIsBooking(false);
+    };
 
   return (
     <Dialog open={Boolean(course)} onClose={onClose} fullWidth maxWidth="sm">
@@ -69,12 +111,12 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
                 color: course.reviews?.length ? "primary.main" : "text.secondary",
               }}
               onClick={() => {
-                if (course.reviews?.length && onShowReviews) {
-                  onShowReviews(course);
-                }
+                  if ((course.rating_count > 0) && onShowReviews) {
+                    onShowReviews(course);
+                  }
               }}
             >
-              {course.reviews?.length || 0} Bewertung{course.reviews?.length === 1 ? "" : "en"}
+              {course.rating_count || 0} Bewertung{course.rating_count === 1 ? "" : "en"}
             </Typography>
           </Box>
         )}
@@ -82,7 +124,7 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
         <Box display="flex" alignItems="center" mt={2} mb={2}>
           <CalendarTodayIcon fontSize="small" sx={{ mr: 1 }} />
           <Typography>
-            {formattedDate}, {course.time || "17:00 - 17:50"}
+              {formattedDate}, {timeRange}
           </Typography>
         </Box>
 
@@ -117,6 +159,7 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
 
           <Typography variant="body2" mb={1}>Raum: {room}</Typography>
 
+          {/*
           <Box>
             <Link
               href={mapsUrl}
@@ -128,7 +171,7 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
               {fullAddress}
             </Link>
           </Box>
-
+          
           <Box mt={2} sx={{ width: "100%", height: 200, borderRadius: 1, overflow: "hidden" }}>
             <iframe
               title="Kursort Karte"
@@ -140,13 +183,35 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
               allowFullScreen
             />
           </Box>
+          */}
+          {/* Platzhalter anstatt der eingebetteten Google Maps, da Google Maps Karten API ab einem bestimmten Nutzungspunkt kostenpflichtig ist */}
+            <Box>{fullAddress}</Box>
+            <Box
+              mt={2}
+              sx={{
+                width: "100%",
+                height: 200,
+                borderRadius: 1,
+                overflow: "hidden",
+                backgroundColor: "#ccc", // fallback
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <img
+                src="/map-placeholder.png"
+                alt="Kartenplatzhalter"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </Box>
         </Box>
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose}>Schließen</Button>
-        <Button variant="contained" color="primary" onClick={() => alert("Online gebucht!")}>
-          Online buchen
+        <Button variant="contained" color="primary" onClick={handleBooking} disabled={isBooking}>
+           {isBooking ? "Wird gebucht..." : "Online buchen"}
         </Button>
       </DialogActions>
     </Dialog>
