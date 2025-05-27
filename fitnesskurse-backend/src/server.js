@@ -37,7 +37,11 @@ app.use("/api/fitnesscourses", fitnessCourseRoutes);
 const courseRoutes = require('./routes/courseRoutes');
 app.use('/api/courses', courseRoutes);
 
+// Meta-Routen
+const metaRoutes = require('./routes/metaRoutes');
+app.use('/api', metaRoutes);
 
+// Buchungs-Routen
 const bookingRoutes = require('./routes/bookingRoutes');
 console.log("📦 bookingRoutes geladen"); 
 app.use('/api/bookings', bookingRoutes);
