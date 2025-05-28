@@ -5,6 +5,9 @@ const router = express.Router();
 const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware');
 const bookingController = require('../controllers/bookingController');
 
+// Gebuchte Kurse holen
+router.get("/my", authenticateToken, bookingController.getUserBookings);
+
 // Kurs buchen (nur Kunde)
 router.post('/', authenticateToken, authorizeRole(['kunde']), bookingController.bookCourse);
 

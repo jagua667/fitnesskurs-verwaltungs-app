@@ -24,7 +24,9 @@ pool.connect()
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',  // Frontend-URL
+}));
 
 // Authentifizierungs- und Rollen-Middleware importieren
 const { authenticateToken, authorizeRole } = require('./middleware/authMiddleware');

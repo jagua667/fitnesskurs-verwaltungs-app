@@ -6,6 +6,49 @@ const {
   sendCancellationEmailToTrainer,
 } = require('../services/mailer');
 
+// 🔍 Alle Buchungen eines Nutzers abrufen
+exports.getUserBookings = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const result = await pool.query(`
+SELECT b.id AS booking_id, b.booking_date, c.*, c.title AS course_name, t.name AS trainer, c.trainer_id AS trainer_id, u.email AS user_email, t.email AS trainer_email, cr.average_rating AS average_rating, cr.rating_count AS rating_count, cr.user_has_rated         
+      FROM bookings b
+      JOIN courses c ON b.course_id = c.id
+      JOIN users t ON c.trainer_id = t.id
+      JOIN users u ON b.user_id = u.id
+      JOIN (SELECT c2.id, ROUND(AVG(r.rating)::numeric, 1) AS average_rating, COUNT(r.rating) AS rating_count, BOOL_OR(r.user_id = $1) AS user_has_rated FROM courses c2 LEFT JOIN ratings r ON c2.id = r.course_id GROUP BY c2.id) cr ON c.id = cr.id
+      WHERE b.user_id = $1 AND b.status = 'booked'
+    `, [userId]);
+
+    const bookings = result.rows.map(course => ({
+      id: course.booking_id,
+      booking_date: course.booking_date ? course.booking_date.toISOString() : null,
+      name: course.course_name,
+      user_email: course.user_email,
+      description: course.description,
+      date: course.start_time ? course.start_time.toISOString().split("T")[0] : "unbekannt",
+      time: (course.start_time && course.end_time)
+        ? `${course.start_time.toTimeString().slice(0, 5)} - ${course.end_time.toTimeString().slice(0, 5)}`
+        : "unbekannt",
+      room: course.location || "unbekannt",
+      trainer: course.trainer || "unbekannt",
+      user_has_rated: course.user_has_rated,
+      rating: course.average_rating ?? null,
+      rating_count: course.rating_count ?? null,
+      repeat: course.repeat, // falls es ein JSON-Feld o.Ä. ist
+      repeat_until: course.repeat_until ? course.repeat_until.toISOString() : null,
+      // weitere Felder falls benötigt
+    }));
+
+    res.json(bookings);
+  } catch (err) {
+    console.error("Fehler beim Abrufen der Buchungen:", err);
+    res.status(500).json({ message: "Fehler beim Laden der Buchungen" });
+  }
+};
+
+
 // 🟢 Kurs buchen
 exports.bookCourse = async (req, res) => {
   const userId = req.user.id;

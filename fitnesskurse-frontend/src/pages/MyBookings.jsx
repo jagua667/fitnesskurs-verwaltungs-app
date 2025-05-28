@@ -18,9 +18,10 @@ import { ArrowBack, ArrowForward, ViewList, CalendarViewWeek, Delete } from "@mu
 import { startOfWeek, addDays, format, isValid, addWeeks, subWeeks } from "date-fns";
 import RatingDialog from "../components/RateDialog";
 import { differenceInWeeks } from "date-fns";
-import { mockCourses } from "../mock/courses";
+import axios from "axios";
+// import { mockCourses } from "../mock/courses";
 
-const currentUserEmail = "test@example.com";
+const currentUserEmail = (course) => course.user_email;
 
 //const canRateCourse = (course, currentUserEmail) => {
 //const weeksSince = differenceInWeeks(new Date(), new Date(course.date));
@@ -28,10 +29,9 @@ const currentUserEmail = "test@example.com";
 //const hasRated = course.ratedBy.includes(currentUserEmail);
 //return weeksSince >= 4 && hasBooked && !hasRated;
 //};
-const canRateCourse = (course, currentUserEmail) => {
-  const hasBooked = course.bookedBy.includes(currentUserEmail);
-  const hasRated = course.ratedBy.includes(currentUserEmail);
-  return hasBooked && !hasRated;
+const canRateCourse = (course) => {
+    const weeksSince = differenceInWeeks(new Date(), new Date(course.booking_date));
+    return weeksSince >= 4 && !course.user_has_rated;
 };
 
 const handleRatingSubmit = (course, rating) => {
@@ -49,54 +49,75 @@ const timeSlots = [
 const MyBookings = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [viewMode, setViewMode] = useState("calendar"); // "calendar" | "list"
-  const [bookings, setBookings] = useState(mockCourses);
+  const [bookings, setBookings] = useState([]);
   const [ratingDialogCourse, setRatingDialogCourse] = useState(null);
 
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState(null);
 
-  useEffect(() => {
-    if (!selectedDate || !isValid(selectedDate)) {
-      const monday = startOfWeek(new Date(), { weekStartsOn: 1 });
-      setSelectedDate(monday);
-      return;
+useEffect(() => {
+  if (!selectedDate || !isValid(selectedDate)) {
+    const monday = startOfWeek(new Date(), { weekStartsOn: 1 });
+    setSelectedDate(monday);
+    return;
+  }
+
+  const fetchBookings = async () => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("http://localhost:5000/api/bookings/my", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+          //withCredentials: true, // um Cookies mitzuschicken, falls benötigt
+        });
+
+      const data = response.data;
+
+        const generateRecurringBookings = (bookings, startOfWeekDate) => {
+          const recurringBookings = [];
+
+          bookings.forEach((booking) => {
+            const repeatUntil = new Date(booking.repeat_until);
+            const originalBookingDate = new Date(booking.date);
+            const dayOfWeek = (originalBookingDate.getDay() + 6) % 7; // 0 = Mo, ..., 6 = So
+
+            if (booking.repeat === "weekly") {
+              const recurringDate = addDays(startOfWeekDate, dayOfWeek);
+              if (recurringDate <= repeatUntil) {
+                const dateStr = format(recurringDate, "yyyy-MM-dd");
+                if (!recurringBookings.some(b => b.name === booking.name && b.date === dateStr)) {
+                  recurringBookings.push({
+                    ...booking,
+                    date: dateStr,
+                  });
+                }
+              }
+            } else {
+              const bookingDate = new Date(booking.date);
+              const weekStart = new Date(startOfWeekDate);
+              const weekEnd = addDays(weekStart, 6);
+
+              if (bookingDate >= weekStart && bookingDate <= weekEnd) {
+                recurringBookings.push(booking);
+              }
+            }
+          });
+
+          return recurringBookings;
+        };
+
+
+      const recurringBookings = generateRecurringBookings(data, selectedDate);
+      setBookings(recurringBookings);
+
+    } catch (err) {
+      console.error("Fehler beim Laden der Buchungen:", err);
     }
+  };
 
-    const generateRecurringBookings = (bookings, startOfWeekDate) => {
-      const recurringBookings = [];
-
-      bookings.forEach((booking) => {
-        if (booking.repeat && booking.repeat.interval === "weekly") {
-          const dayOfWeek = booking.repeat.dayOfWeek;
-          const recurringDate = addDays(startOfWeekDate, dayOfWeek - 1); // Montag = 1
-          const dateStr = format(recurringDate, "yyyy-MM-dd");
-
-          // Nur wenn der Kurs zu diesem Datum noch nicht existiert
-          if (!recurringBookings.some(b => b.name === booking.name && b.date === dateStr)) {
-            recurringBookings.push({
-              ...booking,
-              date: dateStr,
-            });
-          }
-        } else {
-          // Einmalige Kurse, wie gehabt
-          const bookingDate = new Date(booking.date);
-          const weekStart = new Date(startOfWeekDate);
-          const weekEnd = addDays(weekStart, 6);
-
-          if (bookingDate >= weekStart && bookingDate <= weekEnd) {
-            recurringBookings.push(booking);
-          }
-        }
-      });
-
-      return recurringBookings;
-    };
-
-
-    const recurringBookings = generateRecurringBookings(mockCourses, selectedDate);
-    setBookings(recurringBookings);
-  }, [selectedDate]);
+  fetchBookings();
+}, [selectedDate]);
 
   if (!selectedDate || !isValid(selectedDate)) return null;
 
