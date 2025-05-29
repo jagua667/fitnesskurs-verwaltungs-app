@@ -46,5 +46,5 @@ async function exportRatings(req, res) {
   }
 }
 
-module.exports = {getRatingsByCourseId, exportRatings };
+module.exports = {getRatingsByCourseId, exportRatings};
 

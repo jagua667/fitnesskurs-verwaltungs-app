@@ -16,31 +16,19 @@ import {
 } from "@mui/material";
 import { ArrowBack, ArrowForward, ViewList, CalendarViewWeek, Delete } from "@mui/icons-material";
 import { startOfWeek, addDays, format, isValid, addWeeks, subWeeks } from "date-fns";
-import RatingDialog from "../components/RateDialog";
+import RatingDialog from "../components/RatingDialog";
 import { differenceInWeeks } from "date-fns";
 import axios from "axios";
-// import { mockCourses } from "../mock/courses";
 
 const currentUserEmail = (course) => course.user_email;
 
-//const canRateCourse = (course, currentUserEmail) => {
-//const weeksSince = differenceInWeeks(new Date(), new Date(course.date));
-//const hasBooked = course.bookedBy.includes(currentUserEmail);
-//const hasRated = course.ratedBy.includes(currentUserEmail);
-//return weeksSince >= 4 && hasBooked && !hasRated;
-//};
 const canRateCourse = (course) => {
     const weeksSince = differenceInWeeks(new Date(), new Date(course.booking_date));
     return weeksSince >= 4 && !course.user_has_rated;
 };
 
-const handleRatingSubmit = (course, rating) => {
-  console.log(`Rating für ${course.name}: ${rating} Sterne`);
-  // Hier ggf. Backend-Aufruf oder Statusaktualisierung
-};
-
 const timeSlots = [
-  { label: "Vormittag", start: "08:00", end: "12:00" },
+  { label: "Vormittag", start: "06:00", end: "12:00" },
   { label: "Mittag", start: "12:00", end: "14:00" },
   { label: "Nachmittag", start: "14:00", end: "18:00" },
   { label: "Abend", start: "18:00", end: "22:00" },
@@ -55,12 +43,55 @@ const MyBookings = () => {
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState(null);
 
-useEffect(() => {
-  if (!selectedDate || !isValid(selectedDate)) {
-    const monday = startOfWeek(new Date(), { weekStartsOn: 1 });
-    setSelectedDate(monday);
-    return;
-  }
+    useEffect(() => {
+      if (!selectedDate || !isValid(selectedDate)) {
+        const monday = startOfWeek(new Date(), { weekStartsOn: 1 });
+        setSelectedDate(monday);
+        return;
+      }
+
+      fetchBookings();
+    }, [selectedDate]);
+
+    const handleRatingSubmit = async (course, review) => {
+      try {
+        const token = localStorage.getItem("token");
+
+        console.log("Kurs-ID für Bewertung:", course);
+
+        const course_id = course.course_id ?? course.id;
+
+        if (!course_id) {
+          console.error("❌ Keine gültige Kurs-ID gefunden für:", course);
+          return;
+        }
+
+        const response = await axios.post(
+          "http://localhost:5000/api/ratings",
+          {
+            course_id: course_id, // 
+            user_id: course.user_id, // muss im course-Objekt sein oder separat geholt werden
+            rating: review.stars,
+            comment: review.comment || "", // falls Kommentar optional
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log("Bewertung gespeichert:", response.data);
+
+        // Nach dem Speichern ggf. UI aktualisieren
+        setRatingDialogCourse(null);
+
+        // Bookings neu laden
+        await fetchBookings(); // nach oben auslagern und aufrufbar machen
+      } catch (error) {
+        console.error("Fehler beim Speichern der Bewertung:", error);
+      }
+    };
 
   const fetchBookings = async () => {
     try {
@@ -73,6 +104,7 @@ useEffect(() => {
         });
 
       const data = response.data;
+        console.log("response.data: ", response.data);
 
         const generateRecurringBookings = (bookings, startOfWeekDate) => {
           const recurringBookings = [];
@@ -116,9 +148,6 @@ useEffect(() => {
     }
   };
 
-  fetchBookings();
-}, [selectedDate]);
-
   if (!selectedDate || !isValid(selectedDate)) return null;
 
   const startOfSelectedWeek = startOfWeek(selectedDate, { weekStartsOn: 1 });
@@ -154,11 +183,23 @@ useEffect(() => {
     setOpenCancelDialog(true);
   };
 
-  const confirmCancel = () => {
-    setBookings(bookings.filter(booking => booking.id !== bookingToCancel));
-    setOpenCancelDialog(false);
-    setBookingToCancel(null);
-  };
+    const confirmCancel = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        await axios.delete(`http://localhost:5000/api/bookings/${bookingToCancel}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setBookings(bookings.filter(booking => booking.id !== bookingToCancel));
+        setOpenCancelDialog(false);
+        setBookingToCancel(null);
+      } catch (error) {
+        console.error("Fehler beim Stornieren der Buchung:", error);
+      }
+    };
 
   const handleCloseDialog = () => {
     setOpenCancelDialog(false);
@@ -318,4 +359,3 @@ useEffect(() => {
 };
 
 export default MyBookings;
-
