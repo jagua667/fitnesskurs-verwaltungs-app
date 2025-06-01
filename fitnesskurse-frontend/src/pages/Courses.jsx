@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { expandRecurringCourses, mapCourse } from "../utils/courseHelpers";
 import {
   Box,
   Typography,
@@ -15,11 +16,8 @@ import { Button } from '@mui/material';
 import CourseDialog from "../components/CourseDialog";
 import WeekPicker from "../components/WeekPicker";
 import CourseFilter from "../components/CourseFilter";
-import { differenceInWeeks } from 'date-fns';
 import ReviewsDialog from "../components/ReviewsDialog";
 import axios from "axios";
-
-const currentUserEmail = "test@example.com";
 
 const timeSlots = [
   { label: "Vormittag", start: "08:00", end: "12:00" },
@@ -30,67 +28,6 @@ const timeSlots = [
 
 const handleRatingSubmit = (course, rating) => {
   console.log(`Rating für ${course.name}: ${rating} Sterne`);
-};
-
-const expandRecurringCourses = (course) => {
-  const occurrences = [];
-
-  const start = new Date(course.start_time);
-  const end = new Date(course.end_time);
-
-  // Falls kein repeat gesetzt ist, normalen Kurs zurückgeben
-  if (course.repeat === 'none' || !course.repeat) {
-    return [mapCourse(course)];
-  }
-
-  const until = new Date(course.repeat_until);
-  let currentStart = new Date(start);
-  let currentEnd = new Date(end);
-
-  while (currentStart <= until) {
-    const repeatedCourse = {
-      ...course,
-      start_time: currentStart.toISOString(),
-      end_time: currentEnd.toISOString(),
-    };
-    occurrences.push(mapCourse(repeatedCourse));
-
-    // Für wöchentliche Wiederholung:
-    if (course.repeat === 'weekly') {
-      currentStart = addDays(currentStart, 7);
-      currentEnd = addDays(currentEnd, 7);
-    }
-  }
-
-  return occurrences;
-};
-
-
-const mapCourse = (course) => {
-  console.log("Original backend course:", course);
-  console.log(`Repeat: ${course.repeat}, Repeat Until: ${course.repeat_until}`);
-
-  let start_time = course.start_time;
-  let end_time = course.end_time;
-
-  if (!start_time && course.time && course.date) {
-    const [startStr, endStr] = course.time.split(" - ");
-    start_time = `${course.date}T${startStr}:00`;
-    end_time = `${course.date}T${endStr}:00`;
-  }
-
-  return {
-    ...course,
-    title: course.title || course.name || "Kein Titel",
-    start: start_time,
-    end: end_time,
-    location: course.location || "Unbekannter Ort",
-    trainer_name: course.trainer_name || "Unbekannter Trainer",
-    rating: parseFloat(course.average_rating) || null,
-    rating_count: course.rating_count || 0,
-    repeat: course.repeat || 'none',
-    repeat_until: course.repeat_until || null,
-  };
 };
 
 const Courses = () => {

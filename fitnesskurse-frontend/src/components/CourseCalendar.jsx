@@ -11,15 +11,15 @@ import {
 } from '@mui/material';
 import { Global } from '@emotion/react';
 import rrulePlugin from '@fullcalendar/rrule';
-import { mockCourses } from '../mock/courses'; 
 import CloseIcon from '@mui/icons-material/Close';
 import IconButton from '@mui/material/IconButton';
 
-const CourseCalendar = () => {
+const CourseCalendar = ({ events }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  console.log("events: ", events);
 
-  const recurringEvents = mockCourses.map((course) => {
+  /*const recurringEvents = mockCourses.map((course) => {
     const [startTime] = course.time.split(' - ');
     const startDateTime = `${course.date}T${startTime}`;
 
@@ -36,7 +36,8 @@ const CourseCalendar = () => {
         participant: course.teilnehmer,
       },
     };
-  });
+  });*/
+  const recurringEvents = events;
 
   return (
     <div>
