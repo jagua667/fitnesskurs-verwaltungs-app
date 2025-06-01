@@ -22,9 +22,11 @@ const defaultData = {
   endTime: "",
   location: "",
   max_capacity: "",
-  course_level: "", // neu
-  notes: "", // neu, Hinweise für Teilnehmer
-  trainer_name: "", // neu
+  course_level: "",
+  notes: "",
+  trainer_name: "",
+  repeat: "",
+  repeat_until: "",
 };
 
 const levelOptions = [
@@ -76,6 +78,10 @@ const CourseForm = ({
         course_level: course.course_level || "",
         notes: course.notes || "",
         trainer_name: course.trainer_name || currentTrainerName || "",
+        repeat: course.repeat || "",
+        repeat_until: course.repeat_until
+          ? course.repeat_until.slice(0, 10)
+          : "",
       });
     } else {
       setFormData({ ...defaultData, trainer_name: currentTrainerName || "" });
@@ -170,6 +176,8 @@ const CourseForm = ({
       course_level: formData.course_level || null,
       notes: formData.notes || null,
       trainer_name: formData.trainer_name || null,
+      repeat: formData.repeat || null,
+      repeat_until: formData.repeat_until || null,
     };
 
     try {
@@ -270,6 +278,33 @@ const CourseForm = ({
               />
             </Grid>
           </Grid>
+
+        <TextField
+          select
+          label="Wiederholung"
+          fullWidth
+          margin="normal"
+          name="repeat"
+          value={formData.repeat}
+          onChange={handleChange}
+        >
+          <MenuItem value="">Keine Wiederholung</MenuItem>
+          <MenuItem value="weekly">Wöchentlich</MenuItem>
+          <MenuItem value="monthly">Monatlich</MenuItem>
+        </TextField>
+
+        {formData.repeat && (
+          <TextField
+            label="Wiederholen bis"
+            type="date"
+            name="repeat_until"
+            value={formData.repeat_until}
+            onChange={handleChange}
+            InputLabelProps={{ shrink: true }}
+            fullWidth
+            margin="normal"
+          />
+        )}
 
           <TextField
             label="Ort"
