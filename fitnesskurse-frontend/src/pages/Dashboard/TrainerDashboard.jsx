@@ -21,9 +21,6 @@ const TrainerDashboard = () => {
   const [expandedCourses, setExpandedCourses] = useState([]);
 
     useEffect(() => {
-      console.log("user: ", user);
-      console.log("token: ", token);
-      console.log("tokenFromLocalStorage:", tokenFromLocalStorage);
       const fetchTrainerCourses = async () => {
           try {
           const res = await fetch('http://localhost:5000/api/trainer/courses', {
@@ -35,7 +32,7 @@ const TrainerDashboard = () => {
               throw new Error(`Fehler beim Laden der Kurse: ${res.status} ${res.statusText}`);
           }
           const data = await res.json();
-          console.log("Ergebnis von fetchTrainerCourses (api/trainer/courses): ", data);
+          console.log("Ergebnis von /api/trainer/courses: ", data);
           let allExpandedCourses = [];
 
           data.forEach(course => {
@@ -62,7 +59,6 @@ const TrainerDashboard = () => {
         throw new Error(`Fehler beim Laden der Bewertungen: ${res.status} ${res.statusText}`);
       }
       const data = await res.json();
-      console.log("Ergebnis von fetchRatings (api/ratings/trainer): ", data);
       setRatings(data);
     } catch (error) {
       console.error('Fehler beim Laden der Bewertungen:', error);
@@ -119,11 +115,12 @@ const TrainerDashboard = () => {
       setCourseToDelete(null);
     };
 
-   const handleSave = async (course) => {
+    const handleSave = async (course) => {
       try {
         let response;
+        console.log("course.id: ", course.id);
         if (course.id) {
-          // Kurs aktualisieren (siehe nächster Punkt)
+          // Kurs aktualisieren
           response = await fetch(`http://localhost:5000/api/courses/${course.id}`, {
             method: 'PUT',
             headers: {
@@ -147,10 +144,24 @@ const TrainerDashboard = () => {
         if (!response.ok) throw new Error('Fehler beim Speichern des Kurses');
 
         const savedCourse = await response.json();
+        const mappedCourse = mapCourse(savedCourse);
+        const expanded = expandRecurringCourses(mappedCourse);
+
+        // State aktualisieren
         setCourses(prev => {
           const updated = course.id
             ? prev.map(k => (k.id === savedCourse.id ? savedCourse : k))
             : [...prev, savedCourse];
+          return updated;
+        });
+
+        setExpandedCourses(prev => {
+          const updated = course.id
+            ? [
+                ...prev.filter(c => c.original_id !== savedCourse.id),
+                ...expanded
+              ]
+            : [...prev, ...expanded];
           return updated;
         });
 
@@ -160,7 +171,6 @@ const TrainerDashboard = () => {
         console.error('Fehler beim Speichern:', error);
       }
     };
-
 
     const calendarEvents = expandedCourses.map(k => ({
       title: `${k.name}\n${k.time || ""}`,
@@ -173,8 +183,6 @@ const TrainerDashboard = () => {
         participant_count: k.participant_count || 0
       }
     }));
-    console.log("calendarEvents: ", calendarEvents);
-
 
     const handleExport = () => {
       // --- Kurse ---
@@ -282,7 +290,17 @@ const TrainerDashboard = () => {
           <CourseItem
             course={k}
             onEdit={() => {
-              setEditCourse(k);
+              const [start_time, end_time] = k.time?.split(' - ') || [null, null];
+
+              const parsedDate = k.date instanceof Date ? k.date : new Date(k.date);
+
+              setEditCourse({
+                ...k,
+                start_time,
+                end_time,
+                date: parsedDate, // <<< Hier wichtig!
+              });
+
               setFormOpen(true);
             }}
             onDelete={() => handleDeleteClick(k)}

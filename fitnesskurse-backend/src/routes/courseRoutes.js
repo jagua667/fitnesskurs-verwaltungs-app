@@ -9,9 +9,9 @@ router.get('/export/courses', authenticateToken, courseController.exportCourses)
 // Weitere Routen
 router.get('/', courseController.getAllCourses);
 router.get('/:id', courseController.getCourseById);
-router.post('/', authenticateToken, authorizeRole(['Admin', 'Trainer']), courseController.createCourse);
-router.put('/:id', authenticateToken, authorizeRole(['Admin', 'Trainer']), courseController.updateCourse);
-router.delete('/:id', authenticateToken, authorizeRole(['Admin', 'Trainer']), courseController.deleteCourse);
+router.post('/', authenticateToken, authorizeRole(['admin', 'trainer']), courseController.createCourse);
+router.put('/:id', authenticateToken, authorizeRole(['admin', 'trainer']), courseController.updateCourse);
+router.delete('/:id', authenticateToken, authorizeRole(['admin', 'trainer']), courseController.deleteCourse);
 
 module.exports = router;
 

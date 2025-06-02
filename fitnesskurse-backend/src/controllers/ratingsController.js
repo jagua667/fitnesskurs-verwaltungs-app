@@ -7,13 +7,35 @@ const getRatingsByCourseId = async (req, res) => {
 
   try {
     const result = await db.query(
-      'SELECT r.*, u.name AS user_name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.course_id = $1',
+      'SELECT r.*, u.name AS user_name FROM ratings r JOIN users u ON r.user_id = u.id WHERE r.course_id = $1',
       [courseId]
     );
     res.json(result.rows); // Gibt alle Bewertungen zurück
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Serverfehler' });
+  }
+};
+
+const getRatingsForTrainerCourses = async (req, res) => {
+  const trainerId = req.user.id;
+  console.log("Trainer ID:", trainerId);
+
+  try {
+    const result = await db.query(`
+      SELECT r.*, u.name AS user_name 
+      FROM ratings r 
+      JOIN users u ON r.user_id = u.id 
+      WHERE r.course_id IN (
+        SELECT id FROM courses WHERE trainer_id = $1
+      )
+    `, [trainerId]);
+
+    console.log("Ratings result:", result.rows);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Fehler beim Abrufen der Bewertungen.' });
   }
 };
 
@@ -46,5 +68,5 @@ async function exportRatings(req, res) {
   }
 }
 
-module.exports = {getRatingsByCourseId, exportRatings};
+module.exports = {getRatingsByCourseId, getRatingsForTrainerCourses, exportRatings};
 

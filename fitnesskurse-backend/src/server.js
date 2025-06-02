@@ -39,6 +39,10 @@ app.use("/api/fitnesscourses", fitnessCourseRoutes);
 const courseRoutes = require('./routes/courseRoutes');
 app.use('/api/courses', courseRoutes);
 
+// Trainer-Routen
+const trainerRoutes = require('./routes/trainerRoutes');
+app.use('/api/trainer', trainerRoutes);
+
 // Meta-Routen
 const metaRoutes = require('./routes/metaRoutes');
 app.use('/api', metaRoutes);

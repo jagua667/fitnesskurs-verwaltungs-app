@@ -127,7 +127,9 @@ exports.updateCourse = async (req, res) => {
     start_time,
     end_time,
     location,
-    max_capacity
+    max_capacity,
+    repeat,
+    repeat_until,
   } = req.body;
 
   try {
@@ -139,10 +141,12 @@ exports.updateCourse = async (req, res) => {
         end_time = $4,
         location = $5,
         max_capacity = $6,
+        repeat = $7,
+        repeat_until = $8,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $7
+      WHERE id = $9
       RETURNING *`,
-      [title, description, start_time, end_time, location, max_capacity, id]
+      [title, description, start_time, end_time, location, max_capacity, repeat, repeat_until, id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Kurs nicht gefunden' });
     res.json(result.rows[0]);

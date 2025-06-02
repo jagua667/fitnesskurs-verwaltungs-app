@@ -49,45 +49,56 @@ const CourseForm = ({
   const [isSaving, setIsSaving] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  useEffect(() => {
-    if (course) {
-      const { start_time, end_time } = course;
+useEffect(() => {
+  if (course) {
+    const {
+      start_time,
+      end_time,
+      date,
+      name,
+      description,
+      room,
+      max_capacity,
+      course_level, // Besteht nicht - aktuell ein Platzhalter
+      notes, // Besteht nicht - aktuell ein Platzhalter
+      trainer,
+      repeat,
+      repeat_until,
+    } = course;
 
-      if (!start_time || !end_time) {
-        console.warn("Fehlende start_time oder end_time im course:", course);
-        return;
-      }
+    // Korrektes Datumsformat erzeugen (z.B. "2025-05-30")
+    const dateStr = date instanceof Date ? date.toISOString().slice(0, 10) : date;
 
-      const start = new Date(start_time);
-      const end = new Date(end_time);
+    // Start-/Endzeit kombinieren mit Datum
+    const start = new Date(`${dateStr}T${start_time}:00`);
+    const end = new Date(`${dateStr}T${end_time}:00`);
 
-      if (isNaN(start) || isNaN(end)) {
-        console.error("Ungültiges Datumsformat im course:", course);
-        return;
-      }
+    // Wichtig: Start-/Endzeit lokal formatieren (nicht UTC), sonst 08:00 statt 10:00
+    const formatTime = (dateObj) =>
+      dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
 
-      setFormData({
-        title: course.title || "",
-        description: course.description || "",
-        startDate: start.toISOString().slice(0, 10),
-        startTime: start.toISOString().slice(11, 16),
-        endDate: end.toISOString().slice(0, 10),
-        endTime: end.toISOString().slice(11, 16),
-        location: course.location || "",
-        max_capacity: course.max_capacity || "",
-        course_level: course.course_level || "",
-        notes: course.notes || "",
-        trainer_name: course.trainer_name || currentTrainerName || "",
-        repeat: course.repeat || "",
-        repeat_until: course.repeat_until
-          ? course.repeat_until.slice(0, 10)
-          : "",
-      });
-    } else {
-      setFormData({ ...defaultData, trainer_name: currentTrainerName || "" });
-    }
-    setErrors({});
-  }, [course, currentTrainerName]);
+    setFormData({
+      title: name || "",                          // 'name' statt 'title' in der course-Prop
+      description: description || "",
+      startDate: dateStr || "",
+      startTime: formatTime(start),
+      endDate: dateStr || "",
+      endTime: formatTime(end),
+      location: room || "",                  
+      max_capacity: max_capacity || "",          
+      course_level: course_level || "",          
+      notes: notes || "",                        
+      trainer_name: trainer || currentTrainerName || "",
+      repeat: repeat ?? "",
+      repeat_until: repeat_until?.slice(0, 10) ?? "",
+    });
+  } else {
+    setFormData({ ...defaultData, trainer_name: currentTrainerName || "" });
+  }
+
+  setErrors({});
+  console.log("Empfangener Kurs:", course);
+}, [course, currentTrainerName]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -163,6 +174,7 @@ const CourseForm = ({
     const end_time = `${formData.endDate}T${formData.endTime}`;
 
     const saveData = {
+      ...(course?.id && { id: course.id }), // 👈 ID bei bestehendem Kurs beibehalten
       title: formData.title,
       description: formData.description,
       start_time,
@@ -198,7 +210,7 @@ const CourseForm = ({
         <DialogTitle>{course ? "Kurs bearbeiten" : "Kurs erstellen"}</DialogTitle>
         <DialogContent>
           <TextField
-            label="Titel *"
+            label="Titel"
             fullWidth
             margin="normal"
             name="title"
@@ -285,7 +297,7 @@ const CourseForm = ({
           fullWidth
           margin="normal"
           name="repeat"
-          value={formData.repeat}
+          value={formData.repeat ?? ""}
           onChange={handleChange}
         >
           <MenuItem value="">Keine Wiederholung</MenuItem>

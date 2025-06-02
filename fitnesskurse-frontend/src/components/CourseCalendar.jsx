@@ -17,7 +17,6 @@ import IconButton from '@mui/material/IconButton';
 const CourseCalendar = ({ events }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  console.log("events: ", events);
 
   /*const recurringEvents = mockCourses.map((course) => {
     const [startTime] = course.time.split(' - ');

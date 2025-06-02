@@ -39,9 +39,6 @@ export function filterCoursesByTimeRange(courses, startDate, endDate) {
 }
 
 export function mapCourse (course) {
-  console.log("Original backend course:", course);
-  console.log(`Repeat: ${course.repeat}, Repeat Until: ${course.repeat_until}`);
-
   let start_time = course.start_time;
   let end_time = course.end_time;
 

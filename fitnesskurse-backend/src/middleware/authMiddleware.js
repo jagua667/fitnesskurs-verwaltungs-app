@@ -8,6 +8,7 @@ const authenticateToken = (req, res, next) => {
     const tokenWithoutBearer = token.slice(7); // Entfernt "Bearer " (7 Zeichen)
 
     try {
+        console.log("Authorization Header:", req.headers.authorization);
         const decoded = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET);
         req.user = decoded;
         console.log("Benutzer im req.user:", req.user);

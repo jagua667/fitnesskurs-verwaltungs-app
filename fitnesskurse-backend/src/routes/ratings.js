@@ -37,6 +37,8 @@ router.post('/', authenticate.authenticateToken, async (req, res) => {
   }
 });
 
+router.get('/trainer', authenticate.authenticateToken, ratingsController.getRatingsForTrainerCourses);
+
 router.get('/course/:courseId', async (req, res) => {
   const { courseId } = req.params;
 
@@ -75,6 +77,5 @@ router.get('/export/:courseId', authenticate.authenticateToken, (req, res) => {
   console.log('Export Route Aufgerufen!'); // Debugging-Log
   ratingsController.exportRatings(req, res);
 });
-
 
 module.exports = router;
