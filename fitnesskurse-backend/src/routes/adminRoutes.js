@@ -1,14 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require("../middleware/authMiddleware"); // Importiere die Middleware
-const pool = require("../config/db"); // Verbindung zur PostgreSQL-Datenbank
+const { authenticateToken, authorizeRole } = require('../middleware/authMiddleware'); 
+
+const pool = require("../db"); // Verbindung zur PostgreSQL-Datenbank
 
 // Route zum Ändern der Benutzerrolle (nur für Admins)
-router.put("/update-role", authMiddleware, async (req, res) => {
-    if (req.user.role !== "admin") {
-        return res.status(403).json({ message: "Zugriff verweigert" });
-    }
-
+router.put("/update-role", authenticateToken, authorizeRole(['admin']), async (req, res) => {
     const { userId, newRole } = req.body;
 
     try {
@@ -20,5 +17,25 @@ router.put("/update-role", authMiddleware, async (req, res) => {
     }
 });
 
-module.exports = router;
+router.get('/stats', authenticateToken, authorizeRole(['admin']), async (req, res) => {
+  try {
+    // const activeUsers = await pool.query('SELECT COUNT(*) FROM users WHERE is_active = true');
+    const activeCourses = await pool.query('SELECT COUNT(*) FROM courses WHERE start_time > NOW()');
+    const totalBookings = await pool.query('SELECT COUNT(*) FROM bookings');
+    const todaysBookings = await pool.query('SELECT COUNT(*) FROM bookings WHERE booking_date BETWEEN NOW() - INTERVAL \'24 HOURS\' AND NOW()'); 
+    const avgRating = await pool.query('SELECT ROUND(AVG(rating), 1) as avg FROM reviews');
 
+    res.json({
+      // activeUsers: activeUsers.rows[0].count,
+      activeCourses: activeCourses.rows[0].count,
+      totalBookings: totalBookings.rows[0].count,
+      todaysBookings: todaysBookings.rows[0].count,
+      avgRating: avgRating.rows[0].avg || 0,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Fehler beim Abrufen der Admin-Statistiken');
+  }
+});
+
+module.exports = router;

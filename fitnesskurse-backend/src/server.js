@@ -43,6 +43,10 @@ app.use('/api/courses', courseRoutes);
 const trainerRoutes = require('./routes/trainerRoutes');
 app.use('/api/trainer', trainerRoutes);
 
+// Admin-Routen
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api/admin', adminRoutes);
+
 // Meta-Routen
 const metaRoutes = require('./routes/metaRoutes');
 app.use('/api', metaRoutes);

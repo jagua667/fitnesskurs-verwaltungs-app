@@ -1,8 +1,31 @@
+import { useEffect, useState } from 'react';
 import { Grid, Card, CardContent, Typography, Button } from '@mui/material';
 import { AccessTime, Group, Event, Star, FileCopy } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 
 export default function AdminDashboard() {
+    const [stats, setStats] = useState(null);
+
+    useEffect(() => {
+      const fetchStats = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch('http://localhost:5000/api/admin/stats', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (!res.ok) throw new Error('Fehler beim Laden der Statistiken');
+          const data = await res.json();
+          setStats(data);
+        } catch (err) {
+          console.error('AdminStats Error:', err);
+        }
+      };
+
+      fetchStats();
+    }, []);
+
   return (
     <div style={{ padding: '20px' }}>
       <Typography variant="h4" gutterBottom>
@@ -11,18 +34,18 @@ export default function AdminDashboard() {
 
       {/* KPIs */}
       <Grid container spacing={4}>
-        <Grid item xs={12} sm={6} md={3}>
+        {/* <Grid item xs={12} sm={6} md={3}>
           <KPIBox 
             title="Aktive Nutzer"
             value="1,234"
             icon={<Group />}
             bgColor="lightblue"
-          />
-        </Grid>
+          /> 
+        </Grid> */}
         <Grid item xs={12} sm={6} md={3}>
           <KPIBox 
             title="Aktive Kurse"
-            value="45"
+            value={`${stats ? stats.activeCourses : '–'}`}
             icon={<Event />}
             bgColor="lightgreen"
           />
@@ -30,7 +53,7 @@ export default function AdminDashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <KPIBox 
             title="Buchungen"
-            value="320 / 15"
+            value={`${stats ? stats.totalBookings : 0} / ${stats ? stats.todaysBookings : 0}`}
             icon={<AccessTime />}
             bgColor="lightcoral"
           />
@@ -38,7 +61,7 @@ export default function AdminDashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <KPIBox 
             title="Ø Bewertung"
-            value="4.6 ⭐"
+            value={`${stats ? stats.avgRating : 0.0} ⭐`}
             icon={<Star />}
             bgColor="lightyellow"
           />
