@@ -84,7 +84,7 @@ function App() {
 
 
           <Route
-            path="/admin/reviews"
+            path="/dashboard/admin/ratings"
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <Layout>
