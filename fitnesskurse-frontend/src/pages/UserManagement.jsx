@@ -13,33 +13,78 @@ import {
   Snackbar,
   Alert,
 } from '@mui/material';
-import { useState } from 'react';
-
-const initialUsers = [
-  { id: 1, name: 'Anna Becker', email: 'anna@example.com', role: 'Kunde' },
-  { id: 2, name: 'Max Schulz', email: 'max@example.com', role: 'Trainer' },
-  { id: 3, name: 'Lisa Meier', email: 'lisa@example.com', role: 'Admin' },
-];
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 export default function UserManagement() {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
-  const handleAction = (userId, actionType) => {
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/admin/users", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        setUsers(res.data);
+      } catch (error) {
+        console.error("Fehler beim Laden der Benutzer", error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const handleAction = async (userId, actionType) => {
     const user = users.find(u => u.id === userId);
-    const confirm = window.confirm(`${user.name} wirklich ${actionType}?`);
+    if (!user) return;
+
+    const isLocked = user.locked;
+    const confirmText = actionType === "toggleLock"
+      ? `${user.name} wirklich ${isLocked ? "entsperren" : "sperren"}?`
+      : `${user.name} wirklich löschen?`;
+
+    const confirm = window.confirm(confirmText);
     if (!confirm) return;
 
-    setSnackbar({
-      open: true,
-      message: `${user.name} wurde ${actionType === 'löschen' ? 'gelöscht' : 'gesperrt'}.`,
-      severity: actionType === 'löschen' ? 'error' : 'warning',
-    });
+    try {
+      if (actionType === "delete") {
+        await axios.delete(`http://localhost:5000/api/admin/users/${userId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setUsers(prev => prev.filter(u => u.id !== userId));
+        setSnackbar({ open: true, message: `${user.name} wurde gelöscht.`, severity: "error" });
+      }
 
-    if (actionType === 'löschen') {
-      setUsers(prev => prev.filter(u => u.id !== userId));
+      if (actionType === "toggleLock") {
+        const newLockedStatus = !isLocked;
+
+        await axios.put(
+          `http://localhost:5000/api/admin/users/lock`,
+          { userId, locked: newLockedStatus },
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        );
+
+        setUsers(prev =>
+          prev.map(u => (u.id === userId ? { ...u, locked: newLockedStatus } : u))
+        );
+
+        setSnackbar({
+          open: true,
+          message: `${user.name} wurde ${newLockedStatus ? "gesperrt" : "entsperrt"}.`,
+          severity: newLockedStatus ? "warning" : "success",
+        });
+      }
+    } catch (error) {
+      console.error("Fehler bei Benutzeraktion", error);
+      setSnackbar({
+        open: true,
+        message: "Aktion fehlgeschlagen",
+        severity: "error",
+      });
     }
-    // Bei „sperren“ könnten wir z. B. einen Status setzen oder später eine API callen
   };
 
   return (
@@ -56,6 +101,7 @@ export default function UserManagement() {
                 <TableCell>Name</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Rolle</TableCell>
+                <TableCell>Status</TableCell>
                 <TableCell align="right">Aktionen</TableCell>
               </TableRow>
             </TableHead>
@@ -65,21 +111,22 @@ export default function UserManagement() {
                   <TableCell>{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.role}</TableCell>
+                  <TableCell>{user.locked ? "Gesperrt" : "Aktiv"}</TableCell>
                   <TableCell align="right">
                     <Button
                       variant="outlined"
-                      color="warning"
+                      color={user.locked ? "success" : "warning"}
                       size="small"
                       sx={{ mr: 1 }}
-                      onClick={() => handleAction(user.id, 'sperren')}
+                      onClick={() => handleAction(user.id, 'toggleLock')}
                     >
-                      Sperren
+                      {user.locked ? "Entsperren" : "Sperren"}
                     </Button>
                     <Button
                       variant="outlined"
                       color="error"
                       size="small"
-                      onClick={() => handleAction(user.id, 'löschen')}
+                      onClick={() => handleAction(user.id, 'delete')}
                     >
                       Löschen
                     </Button>
@@ -95,7 +142,10 @@ export default function UserManagement() {
           autoHideDuration={3000}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
         >
-          <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          <Alert
+            severity={snackbar.severity}
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+          >
             {snackbar.message}
           </Alert>
         </Snackbar>

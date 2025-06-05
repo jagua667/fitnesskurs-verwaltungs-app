@@ -8,22 +8,38 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const login = async (email, password) => {
-    try {
-      const res = await axios.post('/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token);  // Speichere JWT
-      setUser(res.data.user);                         // Setze Benutzerzustand
-      return true;
-    } catch (err) {
-      console.error('Login fehlgeschlagen:', err);
-      return false;
-    }
-  };  
+    const login = async (email, password) => {
+      try {
+        const res = await axios.post('/auth/login', { email, password });
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
-  };
+        if (!res.data?.token) {
+          console.warn("Kein Token erhalten");
+          return false;
+        }
+
+        localStorage.setItem('token', res.data.token);  // Speichere JWT
+        setUser(res.data.user);                         // Setze Benutzerzustand
+        return true;
+
+      } catch (err) {
+        console.error('Login fehlgeschlagen:', err);
+        if (err.response?.status === 403) {
+          alert("Ihr Konto ist gesperrt.");
+        }
+        return false;
+      }
+    };
+
+    const logout = async () => {
+      try {
+        await axios.post('/auth/logout'); // Session invalidieren
+      } catch (err) {
+        console.error("Fehler beim Logout:", err);
+      } finally {
+        localStorage.removeItem('token');
+        setUser(null);
+      }
+    };
 
   // Bei Seiten-Neuladen: Token prüfen & user holen
   useEffect(() => {

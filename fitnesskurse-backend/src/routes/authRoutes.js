@@ -1,10 +1,9 @@
-const { Pool } = require("pg");  // Füge die Pool-Instanz hinzu, falls sie gebraucht wird
 // routes/authRoutes.js
+const { Pool } = require("pg");  // Füge die Pool-Instanz hinzu, falls sie gebraucht wird
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const authController = require("../controllers/authController");
 const { authenticateToken } = require("../middleware/authMiddleware");
-
 const router = express.Router();
 
 // Registrierung
@@ -35,5 +34,7 @@ router.get("/me", authenticateToken, (req, res) => {
 
 // PUT /auth/update-role – Rolle ändern (Admin)
 router.put("/update-role", authenticateToken, authController.updateRole);
+
+router.post("/logout", authenticateToken, authController.logoutUser);
 
 module.exports = router;

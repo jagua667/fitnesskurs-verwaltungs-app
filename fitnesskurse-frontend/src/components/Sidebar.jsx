@@ -28,7 +28,7 @@ const menuItemsByRole = {
     { label: 'Admin Dashboard', path: '/dashboard/admin', icon: <HomeIcon /> },
     { label: 'Alle Kurse', path: '/dashboard/admin/courses', icon: <ListIcon /> },
     { label: 'Benutzerverwaltung', path: '/dashboard/admin/users', icon: <PeopleIcon /> },
-    { label: 'Neue Bewertungen', path: '/dashboard/admin/reviews', icon: <StarRateIcon /> },
+    { label: 'Neue Bewertungen', path: '/dashboard/admin/ratings', icon: <StarRateIcon /> },
   ],
   trainer: [
     { label: 'Trainer Dashboard', path: '/dashboard/trainer', icon: <HomeIcon /> },

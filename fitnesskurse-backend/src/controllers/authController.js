@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { Pool } = require("pg");
@@ -65,13 +66,47 @@ const loginUser = async (req, res) => {
             return res.status(401).json({ message: "Ungültige Anmeldedaten" });
         }
 
+        if (user.rows[0].locked) {
+          console.log("❌ Benutzer ist gesperrt.");
+          return res.status(403).json({ message: "Benutzer ist gesperrt" });
+        }
+
+        const userId = user.rows[0].id;
+
+        /*
+             
+                await pool.query(
+                  'INSERT INTO sessions (id, user_id) VALUES ($1, $2)',
+                  [sessionId, userId]
+                );
+                        const sessionId = uuidv4();
+        */
+        // sessionId abrufen oder neu erstellen
+        let sessionId;
+        const existingSession = await pool.query(
+          'SELECT id FROM sessions WHERE user_id = $1 LIMIT 1',
+          [userId]
+        );
+
+        if (existingSession.rows.length > 0) {
+          sessionId = existingSession.rows[0].id;
+        } else {
+          // ⬇️ In sessions einfügen
+          sessionId = uuidv4();
+          await pool.query(
+            'INSERT INTO sessions (id, user_id) VALUES ($1, $2)',
+            [sessionId, userId]
+          );
+        }
+
         const token = jwt.sign(
-            { id: user.rows[0].id, role: user.rows[0].role?.toLowerCase() },
+            { id: user.rows[0].id, role: user.rows[0].role?.toLowerCase(), sessionId: sessionId },
             process.env.JWT_SECRET,
             { expiresIn: "1h" }
         );
 
         console.log("✅ Login erfolgreich. Token wird zurückgegeben.");
+        console.log("🚨 Sollte NICHT erreicht werden für gesperrte Benutzer");
         res.json({
             token,
             user: {
@@ -105,10 +140,24 @@ const updateRole = async (req, res) => {
     }
 };
 
+const logoutUser = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    await pool.query('DELETE FROM sessions WHERE user_id = $1', [userId]);
+    res.status(200).json({ message: "Logout erfolgreich" });
+  } catch (err) {
+    console.error("Logout-Fehler:", err);
+    res.status(500).json({ message: "Serverfehler beim Logout" });
+  }
+};
+
+
 // Exportiere die Funktionen
 module.exports = {
     registerUser,
     loginUser,
     updateRole,
+    logoutUser,
 };
 

@@ -12,13 +12,13 @@ import {
 import { Star } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
-const NewReviews = () => {
-  const [reviews, setReviews] = useState([]);
+const NewRatings = () => {
+  const [ratings, setRatings] = useState([]);
   const navigate = useNavigate();  // Korrekt innerhalb des Components verwenden
 
   useEffect(() => {
     // Beispiel-Daten, hier könntest du später eine API verwenden
-    setReviews([
+    setRatings([
       {
         id: 1,
         course: 'React Kurs',
@@ -44,7 +44,7 @@ const NewReviews = () => {
 
       {/* Bewertungen anzeigen */}
       <Grid container spacing={4}>
-        {reviews.map((review) => (
+        {ratings.map((review) => (
           <Grid item xs={12} key={review.id}>
             <Card>
               <CardContent>
@@ -89,5 +89,5 @@ const NewReviews = () => {
   );
 };
 
-export default NewReviews;
+export default NewRatings;
 

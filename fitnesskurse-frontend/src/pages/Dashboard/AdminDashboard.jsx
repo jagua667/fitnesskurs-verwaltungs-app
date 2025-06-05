@@ -26,6 +26,34 @@ export default function AdminDashboard() {
       fetchStats();
     }, []);
 
+    const downloadCSV = async (endpoint, filename) => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Fehler beim Herunterladen (${response.status})`);
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Fehler beim CSV-Export:', error);
+        alert('CSV-Export fehlgeschlagen. Siehe Konsole.');
+      }
+    };
+
   return (
     <div style={{ padding: '20px' }}>
       <Typography variant="h4" gutterBottom>
@@ -34,18 +62,18 @@ export default function AdminDashboard() {
 
       {/* KPIs */}
       <Grid container spacing={4}>
-        {/* <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={3}>
           <KPIBox 
             title="Aktive Nutzer"
-            value="1,234"
+            value={`${stats ? stats.activeUsers : 0}`}
             icon={<Group />}
             bgColor="lightblue"
           /> 
-        </Grid> */}
+        </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <KPIBox 
             title="Aktive Kurse"
-            value={`${stats ? stats.activeCourses : '–'}`}
+            value={`${stats ? stats.activeCourses : 0}`}
             icon={<Event />}
             bgColor="lightgreen"
           />
@@ -89,19 +117,35 @@ export default function AdminDashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <ShortcutCard 
             label="Neue Bewertungen" 
-            link="/admin/reviews" 
+            link="/admin/ratings" 
             icon={<Star />} 
             bgColor="lightgreen" 
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            fullWidth 
-            style={{ height: '100%' }}
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={() => downloadCSV(
+              'http://localhost:5000/api/admin/export/courses',
+              'courses_export.csv'
+            )}
           >
-            CSV-Export <FileCopy style={{ marginLeft: '10px' }} />
+            Kurse CSV <FileCopy style={{ marginLeft: '10px' }} />
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Button
+            variant="contained"
+            color="secondary"
+            fullWidth
+            onClick={() => downloadCSV(
+              'http://localhost:5000/api/admin/export/ratings',
+              'ratings_export.csv'
+            )}
+          >
+            Bewertungen CSV <FileCopy style={{ marginLeft: '10px' }} />
           </Button>
         </Grid>
       </Grid>
@@ -111,21 +155,21 @@ export default function AdminDashboard() {
         <Grid item xs={12} sm={4} md={4}>
           <ActivityCard 
             title="Neu angelegte Kurse"
-            content="5 Kurse wurden gestern hinzugefügt."
+            content={`${stats ? stats.newCourses : 0} Kurs/-e wurden gestern hinzugefügt.`}
           />
         </Grid>
         <Grid item xs={12} sm={4} md={4}>
           <ActivityCard 
             title="Neue Bewertungen"
-            content="10 neue Bewertungen für Kurse."
+            content={`${stats ? stats.newRatings : 0} neue Bewertung/-en für Kurse.`}
           />
         </Grid>
-        <Grid item xs={12} sm={4} md={4}>
+        {/*<Grid item xs={12} sm={4} md={4}>
           <ActivityCard 
             title="Letzte Logins"
             content="Admin: 2025-05-11 09:30"
           />
-        </Grid>
+        </Grid>*/}
       </Grid>
     </div>
   );
@@ -182,4 +226,3 @@ function ActivityCard({ title, content }) {
     </Card>
   );
 }
-

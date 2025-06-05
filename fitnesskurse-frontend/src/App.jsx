@@ -13,7 +13,7 @@ import MyBookings from "./pages/MyBookings";
 import ProtectedRoute from "./components/ProtectedRoute";
 import UserManagement from './pages/UserManagement';
 import CourseOverview from './pages/CourseOverview';
-import NewReviews from './pages/NewReviews';
+import NewRatings from './pages/NewRatings';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
@@ -88,7 +88,7 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <Layout>
-                  <NewReviews />
+                  <NewRatings />
                 </Layout>
               </ProtectedRoute>
             }
