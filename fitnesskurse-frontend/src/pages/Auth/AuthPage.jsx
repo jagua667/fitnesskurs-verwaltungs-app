@@ -1,5 +1,21 @@
+/**
+ * AuthPage-Komponente
+ * --------------------
+ * Diese Komponente stellt eine Authentifizierungsseite dar, die sowohl Login als auch Registrierung ermöglicht.
+ * Je nach Benutzerrolle wird nach erfolgreichem Login eine Weiterleitung zu unterschiedlichen Dashboards durchgeführt.
+ * 
+ * Funktionen:
+ * - Login mit E-Mail und Passwort
+ * - Registrierung inkl. Rollenauswahl und Passwortabgleich
+ * - Umschaltung zwischen Passwort sichtbar/unsichtbar
+ * - Rollenabhängige Weiterleitung
+ * 
+ * Relevante Pfade:
+ * - POST /auth/register — zum Registrieren eines neuen Benutzers
+ */
+
 import React, { useState, useEffect } from "react";
-import axios from "../../api/axios";
+import axios from "../../api/axios";  // Axios-Instanz mit Backend-Basis-URL
 import {
   Box,
   Typography,
@@ -18,24 +34,34 @@ import {
   Radio,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";  // Custom Auth Context Hook
 import { useNavigate } from "react-router-dom";
 
+/**
+ * Hauptkomponente der Authentifizierungsseite
+ */
 const AuthPage = () => {
+  // Aktive Tab-Auswahl: 0 = Login, 1 = Registrierung
   const [tabIndex, setTabIndex] = useState(0);
+
+  // Passwortfeld sichtbar/unsichtbar schalten
   const [showPassword, setShowPassword] = useState(false);
+
+  // Zustand für alle Formulareingaben (Login & Registrierung)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    role: "kunde",
+    role: "kunde",   // Default-Rolle
   });
 
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
-  // 🔁 Automatische Weiterleitung nach Login je nach Rolle
+  /**
+   * Effekt: Falls ein Benutzer bereits eingeloggt ist, erfolgt automatische Weiterleitung basierend auf Rolle
+   */
   useEffect(() => {
     if (user) {
       const role = user.role.toLowerCase();
@@ -46,15 +72,22 @@ const AuthPage = () => {
     }
   }, [user, navigate]);
 
+  // Tab-Wechsel
   const handleTabChange = (_, newValue) => setTabIndex(newValue);
+
+  // Sichtbarkeit des Passwortfelds umschalten
   const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
 
+  // Generische Änderung für alle Textfelder
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Login mit Context + Fehlerbehandlung
+  /**
+   * Login-Handler
+   * Ruft die login-Funktion aus dem AuthContext auf und zeigt bei Fehlern eine Warnung
+   */
   const handleLogin = async (e) => {
     e.preventDefault();
     const { email, password } = formData;
@@ -63,9 +96,13 @@ const AuthPage = () => {
     if (!success) {
       alert("Login fehlgeschlagen: Bitte überprüfe deine Eingaben.");
     }
-    // Weiterleitung erfolgt automatisch über useEffect, sobald user gesetzt ist
   };
 
+  /**
+   * Registrierungshandler
+   * - Prüft Passwortbestätigung
+   * - Sendet POST-Anfrage an die API zum Anlegen eines neuen Benutzers
+   */
   const handleRegister = async (e) => {
     e.preventDefault();
     const { name, email, password, confirmPassword, role } = formData;
@@ -84,7 +121,7 @@ const AuthPage = () => {
       });
 
       alert("Registrierung erfolgreich! Du kannst dich jetzt einloggen.");
-      setTabIndex(0);
+      setTabIndex(0);   // Nach Registrierung zurück zum Login-Tab
     } catch (err) {
       console.error("Registrierung fehlgeschlagen", err);
       alert("Registrierung fehlgeschlagen: " + (err.response?.data?.message || "Unbekannter Fehler"));
@@ -99,12 +136,13 @@ const AuthPage = () => {
             Willkommen bei Fitnow
           </Typography>
 
+          {/* Tab-Steuerung für Login vs. Registrierung */}
           <Tabs value={tabIndex} onChange={handleTabChange} centered sx={{ mb: 2 }}>
             <Tab label="Login" />
             <Tab label="Registrieren" />
           </Tabs>
 
-          {/* ✅ Login-Formular */}
+          {/* Login-Formular */}
           {tabIndex === 0 && (
             <Box component="form" onSubmit={handleLogin}>
               <TextField
@@ -142,7 +180,7 @@ const AuthPage = () => {
             </Box>
           )}
 
-          {/* ✅ Registrierungsformular */}
+          {/* Registrierungsformular */}
           {tabIndex === 1 && (
             <Box component="form" onSubmit={handleRegister}>
               <TextField
@@ -203,6 +241,7 @@ const AuthPage = () => {
                 }}
               />
 
+              {/* Rollenwahl via Radio Buttons */}
               <FormLabel sx={{ mt: 2 }}>Rolle auswählen</FormLabel>
               <RadioGroup
                 row
@@ -215,6 +254,7 @@ const AuthPage = () => {
                 <FormControlLabel value="Admin" control={<Radio />} label="Admin" />
               </RadioGroup>
 
+              {/* Zustimmung zu AGB und Datenschutz */}
               <FormControlLabel
                 control={<Checkbox required />}
                 label="Ich stimme den AGB zu"

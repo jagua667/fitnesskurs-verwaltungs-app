@@ -1,3 +1,49 @@
+/**
+ * CourseForm - Formular zur Erstellung und Bearbeitung von Kursen
+ *
+ * Props:
+ * @param {boolean} open             - Steuerung, ob das Dialogfenster geöffnet ist
+ * @param {function} onClose         - Callback zum Schließen des Formulars
+ * @param {object|null} course       - Optional: Kursdaten für die Bearbeitung (null für neuen Kurs)
+ * @param {function} onSave          - Callback zum Speichern der Kursdaten, kann async sein
+ * @param {boolean} showMaxCapacity  - Optional, default=true; ob das Feld für maximale Teilnehmerzahl angezeigt wird
+ * @param {string} currentTrainerName - Optional; vorbefüllter Trainername, z.B. aus Login-Kontext
+ *
+ * Formularelemente:
+ * - Titel (Pflichtfeld)
+ * - Beschreibung (optional, mehrzeilig)
+ * - Startdatum und Startzeit (Pflichtfelder)
+ * - Enddatum und Endzeit (Pflichtfelder)
+ * - Wiederholung (keine, wöchentlich, monatlich) und "Wiederholen bis" Datum (erscheint nur bei Wiederholung)
+ * - Ort (optional)
+ * - Kurslevel (Anfänger, Mittel, Fortgeschritten)
+ * - Hinweise für Teilnehmer (optional, mehrzeilig)
+ * - Trainername (optional, kann aus Login vorgegeben sein)
+ * - Maximale Teilnehmerzahl (optional, nur wenn showMaxCapacity=true, max. 30)
+ *
+ * Validierung:
+ * - Pflichtfelder müssen ausgefüllt sein
+ * - Startdatum/-zeit und Enddatum/-zeit müssen gültige Datums-/Zeitangaben sein
+ * - Endzeit muss nach Startzeit liegen
+ * - Maximale Teilnehmerzahl ist Zahl und ≤ 30 (wenn angezeigt)
+ *
+ * Besonderheiten:
+ * - Daten aus `course` werden beim Öffnen vorbefüllt
+ * - Zeitwerte werden lokal formatiert (keine UTC-Verzerrung)
+ * - Snackbar zeigt Erfolgsnachricht nach speichern
+ * - Fehler werden unter den jeweiligen Feldern angezeigt
+ *
+ * Verwendung:
+ * <CourseForm
+ *    open={open}
+ *    onClose={() => setOpen(false)}
+ *    course={selectedCourse}
+ *    onSave={handleSave}
+ *    showMaxCapacity={true}
+ *    currentTrainerName={"Max Mustermann"}
+ * />
+ */
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,

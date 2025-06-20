@@ -5,7 +5,43 @@ const db = require('../db');
 const authenticate = require('../middleware/authMiddleware.js'); // JWT Middleware
 const ratingsController = require('../controllers/ratingsController');
 
-// Bewertung erstellen oder aktualisieren
+/**
+ * @swagger
+ * /api/ratings:
+ *   post:
+ *     summary: Fügt eine Bewertung hinzu oder aktualisiert eine bestehende
+ *     tags:
+ *       - Bewertungen
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - course_id
+ *               - rating
+ *             properties:
+ *               course_id:
+ *                 type: integer
+ *                 example: 1
+ *               rating:
+ *                 type: number
+ *                 format: float
+ *                 example: 4.5
+ *               comment:
+ *                 type: string
+ *                 example: Sehr guter Kurs!
+ *     responses:
+ *       200:
+ *         description: Bewertung hinzugefügt oder aktualisiert
+ *       401:
+ *         description: Nicht autorisiert
+ *       500:
+ *         description: Serverfehler
+ */
 router.post('/', authenticate.authenticateToken, async (req, res) => {
   const { course_id, rating, comment } = req.body;
   const user_id = req.user.id;
@@ -37,8 +73,44 @@ router.post('/', authenticate.authenticateToken, async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/ratings/trainer:
+ *   get:
+ *     summary: Gibt alle Bewertungen zu Kursen eines Trainers zurück
+ *     tags:
+ *       - Bewertungen
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Bewertungen erfolgreich abgerufen
+ *       401:
+ *         description: Nicht autorisiert
+ */
 router.get('/trainer', authenticate.authenticateToken, ratingsController.getRatingsForTrainerCourses);
 
+
+/**
+ * @swagger
+ * /api/ratings/course/{courseId}:
+ *   get:
+ *     summary: Gibt alle Bewertungen für einen bestimmten Kurs zurück
+ *     tags:
+ *       - Bewertungen
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID des Kurses
+ *     responses:
+ *       200:
+ *         description: Bewertungen erfolgreich abgerufen
+ *       500:
+ *         description: Serverfehler
+ */
 router.get('/course/:courseId', async (req, res) => {
   const { courseId } = req.params;
 
@@ -54,6 +126,26 @@ router.get('/course/:courseId', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/ratings/course/{courseId}/average:
+ *   get:
+ *     summary: Gibt den Durchschnitt der Bewertungen für einen Kurs zurück
+ *     tags:
+ *       - Bewertungen
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID des Kurses
+ *     responses:
+ *       200:
+ *         description: Durchschnittsbewertung erfolgreich abgerufen
+ *       500:
+ *         description: Serverfehler
+ */
 router.get('/course/:courseId/average', async (req, res) => {
   const { courseId } = req.params;
 
@@ -69,10 +161,52 @@ router.get('/course/:courseId/average', async (req, res) => {
   }
 });
 
-// Endpunkt zum Abrufen der Bewertungen eines Kurses
+/**
+ * @swagger
+ * /api/ratings/ratings/{courseId}:
+ *   get:
+ *     summary: Gibt alle Bewertungen eines Kurses zurück (Controller-Route)
+ *     tags:
+ *       - Bewertungen
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID des Kurses
+ *     responses:
+ *       200:
+ *         description: Bewertungen erfolgreich abgerufen
+ *       401:
+ *         description: Nicht autorisiert
+ */
 router.get('/ratings/:courseId', authenticate.authenticateToken, ratingsController.getRatingsByCourseId);
 
-// Endpunkt zum Exportieren der Bewertungen eines Kurses als CSV
+/**
+ * @swagger
+ * /api/ratings/export/{courseId}:
+ *   get:
+ *     summary: Exportiert Bewertungen eines Kurses als CSV
+ *     tags:
+ *       - Bewertungen
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID des Kurses
+ *     responses:
+ *       200:
+ *         description: CSV-Export gestartet
+ *       401:
+ *         description: Nicht autorisiert
+ */
 router.get('/export/:courseId', authenticate.authenticateToken, (req, res) => {
   console.log('Export Route Aufgerufen!'); // Debugging-Log
   ratingsController.exportRatings(req, res);

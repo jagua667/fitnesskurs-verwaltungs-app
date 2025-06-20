@@ -1,3 +1,17 @@
+/**
+ * bookingController.js
+ *
+ * Enthält Funktionen zur Verwaltung von Kursbuchungen:
+ * - Alle Buchungen eines Nutzers abrufen
+ * - Kurs buchen mit Kapazitätsprüfung
+ * - Kursbuchung stornieren mit E-Mail-Benachrichtigungen
+ *
+ * Verwendet:
+ * - PostgreSQL via pool (db.js)
+ * - Mailer-Service für Benachrichtigungen
+ */
+
+
 const pool = require('../db');
 const {
   sendBookingEmailToCustomer,
@@ -6,7 +20,12 @@ const {
   sendCancellationEmailToTrainer,
 } = require('../services/mailer');
 
-// 🔍 Alle Buchungen eines Nutzers abrufen
+/**
+ * Alle Buchungen des angemeldeten Nutzers abrufen
+ * - JOIN auf bookings, courses, users, ratings für umfassende Daten
+ * - Nutzerbezogene Bewertungen auslesen (ob User bewertet hat)
+ * - Datum und Zeiten formatiert zurückgeben
+ */
 exports.getUserBookings = async (req, res) => {
   const userId = req.user.id;
 
@@ -21,6 +40,7 @@ SELECT b.id AS booking_id, b.booking_date, c.*, c.title AS course_name, t.name A
       WHERE b.user_id = $1 AND b.status = 'booked'
     `, [userId]);
 
+    // Buchungsdaten formatieren und zurückgeben
     const bookings = result.rows.map(course => ({
       id: course.booking_id,
       booking_date: course.booking_date ? course.booking_date.toISOString() : null,
@@ -49,12 +69,19 @@ SELECT b.id AS booking_id, b.booking_date, c.*, c.title AS course_name, t.name A
 };
 
 
-// 🟢 Kurs buchen
+/**
+ * Kurs buchen
+ * - Prüft ob Kurs existiert
+ * - Prüft ob Kurs noch Kapazität hat
+ * - Fügt Buchung hinzu
+ * - Sendet Benachrichtigungs-E-Mails an Kunde und Trainer
+ */
 exports.bookCourse = async (req, res) => {
   const userId = req.user.id;
   const { courseId } = req.body;
 
   try {
+    // Kursdetails inkl. Trainerdaten abfragen
     const courseResult = await pool.query(
       `SELECT c.*, u.email AS trainer_email, u.name AS trainer_name 
        FROM courses c 
@@ -67,19 +94,22 @@ exports.bookCourse = async (req, res) => {
 
     const course = courseResult.rows[0];
 
+    // Anzahl aktueller Buchungen prüfen
     const count = await pool.query('SELECT COUNT(*) FROM bookings WHERE course_id = $1', [courseId]);
     if (parseInt(count.rows[0].count) >= course.max_capacity)
       return res.status(400).json({ message: 'Kurs ist ausgebucht' });
 
+     // Buchung anlegen
     await pool.query(
       'INSERT INTO bookings (course_id, user_id, status, booking_date) VALUES ($1, $2, $3, NOW())',
       [courseId, userId, 'booked']
     );
 
+    // Kundendaten holen
     const userResult = await pool.query('SELECT email, name FROM users WHERE id = $1', [userId]);
     const user = userResult.rows[0];
 
-    // 📧 E-Mails senden
+    // E-Mail-Daten vorbereiten
     const emailData = {
       name: user.name,
       user: user.name,
@@ -89,12 +119,14 @@ exports.bookCourse = async (req, res) => {
       trainer: course.trainer_name,
     };
 
+    // E-Mails senden
     await sendBookingEmailToCustomer(user.email, emailData);
     console.log("📧 Kunden-E-Mail:", user.email);
     await sendBookingEmailToTrainer(course.trainer_email, emailData); 
 
     res.json({ message: 'Kurs gebucht und E-Mails gesendet' });
   } catch (err) {
+    // Fehler bei doppelter Buchung (Unique Constraint)
     if (err.code === '23505') {
       return res.status(400).json({ message: 'Du hast diesen Kurs bereits gebucht' });
     }
@@ -102,7 +134,12 @@ exports.bookCourse = async (req, res) => {
   }
 };
 
-// 🔴 Kurs stornieren
+/**
+ * Kursbuchung stornieren
+ * - Prüft ob Buchung existiert und dem Nutzer gehört
+ * - Löscht Buchung aus DB
+ * - Sendet Stornierungs-E-Mails an Kunde und Trainer
+ */
 exports.cancelBooking = async (req, res) => {
   const userId = req.user.id;
   const { bookingId } = req.params;
@@ -110,7 +147,7 @@ exports.cancelBooking = async (req, res) => {
   try {
     console.log(`Versuche, Buchung zu stornieren: bookingId = ${bookingId}, userId = ${userId}`);
 
-    // 🧠 Buchung holen inkl. Kursdaten
+    // Buchung mit Kurs- und Trainerdaten abfragen
     const bookingResult = await pool.query(
       `SELECT b.*, c.title AS course_name, c.start_time, c.end_time, 
               u.email AS trainer_email, u.name AS trainer_name
@@ -129,10 +166,12 @@ exports.cancelBooking = async (req, res) => {
     const booking = bookingResult.rows[0];
     console.log(`Buchung gefunden: ${JSON.stringify(booking)}`);
 
-    // 🧹 Lösche Buchung
+    // Buchung löschen
     const deleteResult = await pool.query('DELETE FROM bookings WHERE id = $1', [bookingId]);
     console.log(`Löschvorgang abgeschlossen: ${deleteResult.rowCount} Zeile(n) gelöscht`);
 
+
+    // Nutzerinfos holen
     const userResult = await pool.query('SELECT email, name FROM users WHERE id = $1', [userId]);
     const user = userResult.rows[0];
 
@@ -145,6 +184,7 @@ exports.cancelBooking = async (req, res) => {
       trainer: booking.trainer_name,
     };
 
+    // E-Mails senden, Fehler abfangen
     try {
       await sendCancellationEmailToCustomer(user.email, emailData);
       await sendCancellationEmailToTrainer(booking.trainer_email, emailData);

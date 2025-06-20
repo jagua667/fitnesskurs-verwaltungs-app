@@ -3,56 +3,71 @@ import { Grid, Card, CardContent, Typography, Button } from '@mui/material';
 import { AccessTime, Group, Event, Star, FileCopy } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 
+/**
+ * AdminDashboard-Komponente
+ * Zeigt aktuelle Statistiken (KPIs), Shortcuts und Exportmöglichkeiten für Admins.
+ * 
+ * API:
+ * - GET /api/admin/stats → Gesamtstatistiken
+ * - GET /api/admin/export/courses → Export aller Kurse (CSV)
+ * - GET /api/admin/export/ratings → Export aller Bewertungen (CSV)
+ */
 export default function AdminDashboard() {
-    const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState(null);   // KPIs aus der API
 
-    useEffect(() => {
-      const fetchStats = async () => {
-        try {
-          const token = localStorage.getItem('token');
-          const res = await fetch('http://localhost:5000/api/admin/stats', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          if (!res.ok) throw new Error('Fehler beim Laden der Statistiken');
-          const data = await res.json();
-          setStats(data);
-        } catch (err) {
-          console.error('AdminStats Error:', err);
-        }
-      };
-
-      fetchStats();
-    }, []);
-
-    const downloadCSV = async (endpoint, filename) => {
+  // Lädt KPIs beim ersten Render
+  useEffect(() => {
+    const fetchStats = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(endpoint, {
-          method: 'GET',
+        const res = await fetch('http://localhost:5000/api/admin/stats', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
-        if (!response.ok) {
-          throw new Error(`Fehler beim Herunterladen (${response.status})`);
-        }
-
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error('Fehler beim CSV-Export:', error);
-        alert('CSV-Export fehlgeschlagen. Siehe Konsole.');
+        if (!res.ok) throw new Error('Fehler beim Laden der Statistiken');
+        const data = await res.json();
+        setStats(data);
+      } catch (err) {
+        console.error('AdminStats Error:', err);
       }
     };
+
+    fetchStats();
+  }, []);
+
+  /**
+* Lädt CSV-Dateien vom Server herunter (z. B. Kurse, Bewertungen)
+* @param {string} endpoint - API-Endpunkt für den CSV-Export
+* @param {string} filename - Dateiname für den Download
+*/
+  const downloadCSV = async (endpoint, filename) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Fehler beim Herunterladen (${response.status})`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Fehler beim CSV-Export:', error);
+      alert('CSV-Export fehlgeschlagen. Siehe Konsole.');
+    }
+  };
 
   return (
     <div style={{ padding: '20px' }}>
@@ -60,18 +75,18 @@ export default function AdminDashboard() {
         Admin Dashboard
       </Typography>
 
-      {/* KPIs */}
+      {/* KPI-Bereich */}
       <Grid container spacing={4}>
         <Grid item xs={12} sm={6} md={3}>
-          <KPIBox 
+          <KPIBox
             title="Aktive Nutzer"
             value={`${stats ? stats.activeUsers : 0}`}
             icon={<Group />}
             bgColor="lightblue"
-          /> 
+          />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <KPIBox 
+          <KPIBox
             title="Aktive Kurse"
             value={`${stats ? stats.activeCourses : 0}`}
             icon={<Event />}
@@ -79,7 +94,7 @@ export default function AdminDashboard() {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <KPIBox 
+          <KPIBox
             title="Buchungen"
             value={`${stats ? stats.totalBookings : 0} / ${stats ? stats.todaysBookings : 0}`}
             icon={<AccessTime />}
@@ -87,7 +102,7 @@ export default function AdminDashboard() {
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <KPIBox 
+          <KPIBox
             title="Ø Bewertung"
             value={`${stats ? stats.avgRating : 0.0} ⭐`}
             icon={<Star />}
@@ -96,30 +111,32 @@ export default function AdminDashboard() {
         </Grid>
       </Grid>
 
-      {/* Quick Actions / Shortcuts */}
+      {/* Admin-Shortcuts und CSV-Export */}
       <Grid container spacing={4} style={{ marginTop: '40px' }}>
         <Grid item xs={12} sm={6} md={3}>
-          <ShortcutCard 
-            label="Benutzerverwaltung" 
+          <ShortcutCard
+            label="Benutzerverwaltung"
             link="/dashboard/admin/users"
-            icon={<Group />} 
-            bgColor="lightgray" 
+            icon={<Group />}
+            bgColor="lightgray"
           />
         </Grid>
+
+        {/* CSV-Exports */}
         <Grid item xs={12} sm={6} md={3}>
-          <ShortcutCard 
-            label="Kursübersicht" 
+          <ShortcutCard
+            label="Kursübersicht"
             link="/dashboard/admin/courses"
-            icon={<Event />} 
-            bgColor="lightblue" 
+            icon={<Event />}
+            bgColor="lightblue"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <ShortcutCard 
-            label="Neue Bewertungen" 
-            link="/admin/ratings" 
-            icon={<Star />} 
-            bgColor="lightgreen" 
+          <ShortcutCard
+            label="Neue Bewertungen"
+            link="/dashboard/admin/newRatings"
+            icon={<Star />}
+            bgColor="lightgreen"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -153,28 +170,27 @@ export default function AdminDashboard() {
       {/* Letzte Aktivität */}
       <Grid container spacing={4} style={{ marginTop: '40px' }}>
         <Grid item xs={12} sm={4} md={4}>
-          <ActivityCard 
+          <ActivityCard
             title="Neu angelegte Kurse"
             content={`${stats ? stats.newCourses : 0} Kurs/-e wurden gestern hinzugefügt.`}
           />
         </Grid>
         <Grid item xs={12} sm={4} md={4}>
-          <ActivityCard 
+          <ActivityCard
             title="Neue Bewertungen"
             content={`${stats ? stats.newRatings : 0} neue Bewertung/-en für Kurse.`}
           />
         </Grid>
-        {/*<Grid item xs={12} sm={4} md={4}>
-          <ActivityCard 
-            title="Letzte Logins"
-            content="Admin: 2025-05-11 09:30"
-          />
-        </Grid>*/}
+        {/* Optional: letzte Logins etc. */}
       </Grid>
     </div>
   );
 }
 
+/**
+ * KPIBox-Komponente
+ * Zeigt eine einzelne Metrik im Dashboard.
+ */
 function KPIBox({ title, value, icon, bgColor }) {
   return (
     <Card sx={{ backgroundColor: bgColor, borderRadius: '10px', boxShadow: 3 }}>
@@ -195,6 +211,10 @@ function KPIBox({ title, value, icon, bgColor }) {
   );
 }
 
+/**
+ * ShortcutCard-Komponente
+ * Verlinkung zu Unterseiten des Admin Dashboards
+ */
 function ShortcutCard({ label, link, icon, bgColor }) {
   return (
     <Card sx={{ backgroundColor: bgColor, borderRadius: '10px', boxShadow: 3 }}>
@@ -214,6 +234,10 @@ function ShortcutCard({ label, link, icon, bgColor }) {
   );
 }
 
+/**
+ * ActivityCard-Komponente
+ * Zeigt letzte Aktivitäten im Adminbereich.
+ */
 function ActivityCard({ title, content }) {
   return (
     <Card sx={{ backgroundColor: 'whitesmoke', borderRadius: '10px', boxShadow: 3 }}>

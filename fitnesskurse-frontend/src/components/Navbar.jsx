@@ -1,3 +1,22 @@
+/**
+ * Navbar-Komponente für die obere Navigationsleiste
+ *
+ * Zeigt:
+ * - Links: App-Logo ("FitNow")
+ * - Mitte: Begrüßung des eingeloggten Nutzers (in Großbuchstaben)
+ *
+ * Verwendet:
+ * - useAuth: Zugriff auf den aktuell authentifizierten Nutzer
+ *
+ * Styling:
+ * - Fixiert am oberen Rand
+ * - Helles Layout mit leichtem Schatten
+ * - Z-Index über der Sidebar (damit Navbar immer oben bleibt)
+ *
+ * Hinweise:
+ * - Die Komponente wird im Layout verwendet und sollte nicht eigenständig verwendet werden.
+ */
+
 import React from "react";
 import { AppBar, Toolbar, Typography } from "@mui/material";
 import { useAuth } from "../context/AuthContext"; // Nutze echten User aus Auth

@@ -19,6 +19,7 @@ import CourseFilter from "../components/CourseFilter";
 import ReviewsDialog from "../components/ReviewsDialog";
 import axios from "axios";
 
+// Zeitfenster zur Gruppierung der Kurse
 const timeSlots = [
   { label: "Vormittag", start: "08:00", end: "12:00" },
   { label: "Mittag", start: "12:00", end: "14:00" },
@@ -26,35 +27,39 @@ const timeSlots = [
   { label: "Abend", start: "18:00", end: "22:00" },
 ];
 
+// Beispiel-Funktion zum Verarbeiten von Bewertungen (hier nur Logging)
 const handleRatingSubmit = (course, rating) => {
   console.log(`Rating für ${course.name}: ${rating} Sterne`);
 };
 
 const Courses = () => {
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  const [ratingDialogCourse, setRatingDialogCourse] = useState(null);
-  const [filterTimes, setFilterTimes] = useState([]);
-  const [filterRooms, setFilterRooms] = useState([]);
-  const [filterTrainers, setFilterTrainers] = useState([]);
-  const [reviewsDialogCourse, setReviewsDialogCourse] = useState(null);
-  const [courses, setCourses] = useState([]);
+  // State-Variablen zur Steuerung der UI und Filter
+  const [selectedDate, setSelectedDate] = useState(null);  // Ausgewähltes Datum (Wochenstart)
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);  // Element für Filter-Menü
+  const [selectedCourse, setSelectedCourse] = useState(null);  // Ausgewählter Kurs für Detaildialog
+  const [ratingDialogCourse, setRatingDialogCourse] = useState(null); // Kurs für Bewertungsdialog (nicht genutzt hier)
+  const [filterTimes, setFilterTimes] = useState([]); // Zeitfilter (z.B. Vormittag, Nachmittag)
+  const [filterRooms, setFilterRooms] = useState([]); // Raumfilter
+  const [filterTrainers, setFilterTrainers] = useState([]); // Trainerfilter
+  const [reviewsDialogCourse, setReviewsDialogCourse] = useState(null); // Kurs für Bewertungen-Dialog
+  const [courses, setCourses] = useState([]);  // Geladene Kursdaten
 
+  // useEffect zum Laden der Kurse, wenn sich das ausgewählte Datum ändert
   useEffect(() => {
-    // Wenn selectedDate nicht gesetzt oder ungültig ist, auf Montag setzen
+    // Falls kein Datum gesetzt oder ungültig, auf den Montag der aktuellen Woche setzen
     if (!selectedDate || !isValid(selectedDate)) {
       const monday = startOfWeek(new Date(), { weekStartsOn: 1 });
       setSelectedDate(monday);
-      return; // Warte mit dem Laden der Kurse bis selectedDate gesetzt ist
+      return;  // Warten bis Datum gesetzt ist, bevor Kurse geladen werden
     }
 
-    // Kurse vom Backend laden
+    // Asynchrone Funktion zum Abrufen der Kurse vom Backend
     const fetchCourses = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/courses");
         let allCourses = [];
 
+        // Für jeden Kurs aus dem Backend: ggf. wiederkehrende Termine auflösen
         response.data.forEach(course => {
           console.log("Original backend course:", course);
           const expanded = expandRecurringCourses(course);
@@ -70,27 +75,45 @@ const Courses = () => {
     fetchCourses();
   }, [selectedDate]);
 
+  // Falls ausgewähltes Datum noch nicht valide ist, nichts rendern
   if (!selectedDate || !isValid(selectedDate)) return null;
 
+  // Eventhandler für Klick auf Kurs: öffnet Detaildialog
   const handleCourseClick = (course) => setSelectedCourse(course);
+
+  // Schließt den Detaildialog
   const handleCloseDialog = () => setSelectedCourse(null);
+
+  // Öffnet das Filtermenü
   const handleFilterClick = (event) => setFilterAnchorEl(event.currentTarget);
+
+  // Schließt das Filtermenü
   const handleFilterClose = () => setFilterAnchorEl(null);
 
+  // Berechnet den Wochenanfang (Montag) der aktuell ausgewählten Woche
   const startOfSelectedWeek = startOfWeek(selectedDate, { weekStartsOn: 1 });
 
+  // Erzeugt eine Liste mit allen Tagen der Woche für die Anzeige
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const day = addDays(startOfSelectedWeek, i);
     return {
-      label: day.toLocaleDateString("de-DE", { weekday: "short" }),
-      rawDate: format(day, "yyyy-MM-dd"),      // für Vergleiche
-      displayDate: format(day, "dd.MM.yyyy"),  // für UI-Anzeige
+      label: day.toLocaleDateString("de-DE", { weekday: "short" }), // z.B. "Mo", "Di"
+      rawDate: format(day, "yyyy-MM-dd"),  // Datumsformat für Vergleiche
+      displayDate: format(day, "dd.MM.yyyy"),   // Datumsanzeige für UI
     };
   });
 
+   /**
+   * Filtert und sortiert Kurse für einen bestimmten Tag und Zeitslot
+   * Berücksichtigt auch aktive Filter für Zeit, Raum und Trainer
+   * @param {string} dayStr - Datum als String "yyyy-MM-dd"
+   * @param {object} slot - Zeitfenster {label, start, end}
+   * @returns {Array} Gefilterte und sortierte Kurse
+   */
   const getCoursesByDayAndSlot = (dayStr, slot) => {
     return courses
       .filter(course => {
+        // Kursdatum validieren und filtern nach dem gegebenen Tag
         const date = new Date(course.start_time);
         if (!isValid(date)) return false;
 
@@ -98,6 +121,7 @@ const Courses = () => {
         return courseDate === dayStr;
       })
       .filter(course => {
+        // Filtern nach Zeitfenster (Zeitslot)
         const date = new Date(course.start_time);
         if (!isValid(date)) return false;
 
@@ -105,6 +129,7 @@ const Courses = () => {
         return courseStartTime >= slot.start && courseStartTime < slot.end;
       })
       .filter(course => {
+        // Weitere Filter: nach ausgewählten Zeiten, Räumen und Trainern
         const date = new Date(course.start_time);
         if (!isValid(date)) return false;
 
@@ -129,6 +154,7 @@ const Courses = () => {
         return matchesTime && matchesRoom && matchesTrainer;
       })
       .sort((a, b) => {
+        // Sortieren der Kurse zuerst nach Startzeit, dann nach Titel alphabetisch
         const aDate = new Date(a.start_time);
         const bDate = new Date(b.start_time);
         if (!isValid(aDate) || !isValid(bDate)) return 0;
@@ -144,22 +170,30 @@ const Courses = () => {
   };
 
   return (
+    
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>Kurskalender</Typography>
 
+     {/* Kopfbereich mit Wochenauswahl und Navigation */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
         <WeekPicker
           selectedDate={selectedDate}
           onDateChange={(date) => {
+            // Bei Änderung: Datum auf Montag der gewählten Woche setzen
             const monday = startOfWeek(new Date(date), { weekStartsOn: 1 });
             setSelectedDate(monday);
           }}
         />
 
         <Box>
+          {/* Buttons für Wochen-Navigation */}
           <IconButton onClick={() => setSelectedDate(prev => subWeeks(prev, 1))}><ArrowBack /></IconButton>
           <IconButton onClick={() => setSelectedDate(prev => addWeeks(prev, 1))}><ArrowForward /></IconButton>
+
+          {/* Button zum Öffnen des Filtermenüs */}
           <IconButton onClick={handleFilterClick}><FilterListIcon /></IconButton>
+
+          {/* Filtermenü mit mehreren Filteroptionen */}
           <Menu
             anchorEl={filterAnchorEl}
             open={Boolean(filterAnchorEl)}
@@ -179,7 +213,7 @@ const Courses = () => {
         </Box>
       </Box>
 
-      {/* Header-Zeile */}
+      {/* Header-Zeile mit Wochentagen und Datum */}
       <Box sx={{
         display: "grid",
         gridTemplateColumns: "repeat(7, 1fr)",
@@ -192,7 +226,7 @@ const Courses = () => {
         ))}
       </Box>
 
-      {/* Zeilen für Zeitslots */}
+      {/* Zeilen für jeden Zeitslot mit Kursen */}
       {timeSlots.map(slot => (
         <Box key={slot.label} sx={{ mb: 3 }}>
           <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
@@ -202,6 +236,8 @@ const Courses = () => {
             </Typography>
             <Box sx={{ flexGrow: 1, height: "1px", backgroundColor: "#ccc", ml: 1 }} />
           </Box>
+
+          {/* Kursfelder pro Tag */}
           <Box
             sx={{
               display: "grid",
@@ -231,7 +267,10 @@ const Courses = () => {
                           },
                         }}
                       >
+                       {/* Kursname */}
                         <Typography variant="subtitle1" fontWeight="bold">{course.title}</Typography>
+
+                        {/* Bewertungsanzeige (Sterne und Anzahl) */}
                         {course.rating !== null && course.rating !== undefined ? (
                           <Box sx={{ display: "flex", alignItems: "center" }}>
                             <Rating
@@ -251,6 +290,7 @@ const Courses = () => {
                           </Typography>
                         )}
 
+                        {/* Informationen zu Trainer und Ort */}
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mt: 0.5 }}>
                           <Box>
                             <Typography variant="body2" color="text.secondary" sx={{ fontWeight: "bold" }}>
@@ -271,6 +311,7 @@ const Courses = () => {
                           </Box>
                         </Box>
 
+                        {/* Kurszeiten */}
                         <Typography variant="body2" color="text.secondary">
                           {format(parseISO(course.start_time), "HH:mm")} – {format(parseISO(course.end_time), "HH:mm")}
                         </Typography>
@@ -286,6 +327,7 @@ const Courses = () => {
         </Box>
       ))}
 
+      {/* Dialog zur Kursdetailanzeige und Bewertung */}
       <CourseDialog
         course={selectedCourse}
         onClose={() => setSelectedCourse(null)}
@@ -305,6 +347,8 @@ const Courses = () => {
           );
         }}
       />
+
+      {/* Dialog für die Anzeige von Bewertungen */}
       <ReviewsDialog
         course={reviewsDialogCourse}
         open={Boolean(reviewsDialogCourse)}

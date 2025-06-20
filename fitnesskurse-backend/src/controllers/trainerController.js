@@ -1,8 +1,22 @@
 const pool = require('../db'); // Verbindung zur Datenbank
 const { parseISO, addWeeks, isBefore } = require('date-fns');
 
+/**
+ * Kurse eines Trainers abrufen.
+ * 
+ * @route GET /api/courses/trainer
+ * @access Authentifizierte Trainer
+ * 
+ * Diese Funktion ruft alle Kurse ab, die vom aktuell angemeldeten Trainer erstellt wurden.
+ * 
+ * Für jeden Kurs werden folgende Informationen berechnet und zurückgegeben:
+ * - Kursdetails (Titel, Beschreibung, Zeiten, Raum etc.)
+ * - Durchschnittliche Bewertung & Anzahl der Bewertungen
+ * - Teilnehmeranzahl & Teilnehmernamen
+ * - Trainerinformationen
+ */
 exports.getCoursesByTrainer = async (req, res) => {
-  const trainerId = req.user.id;
+  const trainerId = req.user.id; // ID des aktuell angemeldeten Trainers
 
   try {
     const result = await pool.query(`
@@ -33,6 +47,7 @@ exports.getCoursesByTrainer = async (req, res) => {
         ORDER BY c.start_time;
     `, [trainerId]);
 
+    // Umwandlung der Rohdaten in ein übersichtliches Objektformat für den Client
     const courses = result.rows.map(course => ({
       id: course.id,
       name: course.title,
@@ -53,7 +68,7 @@ exports.getCoursesByTrainer = async (req, res) => {
       max_capacity: course.max_capacity,
     }));
 
-    res.json(courses);
+    res.json(courses); // Antwort an den Client senden
   } catch (err) {
     console.error("Fehler beim Laden der Trainer-Kurse:", err);
     res.status(500).json({ error: 'Fehler beim Laden der Trainer-Kurse' });

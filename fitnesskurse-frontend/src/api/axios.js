@@ -1,4 +1,15 @@
 // src/api/axios.js
+
+/**
+ * Axios-Instanz zur Kommunikation mit dem Backend-API.
+ * 
+ * - Basis-URL auf das Backend-API gesetzt (localhost:5000/api).
+ * - Standard-Header: Content-Type auf application/json.
+ * - Request-Interceptor: Falls ein JWT-Token im localStorage vorhanden ist,
+ *   wird es als Bearer-Token im Authorization-Header jedes Requests hinzugefügt.
+ * 
+ * So müssen Token nicht manuell bei jedem Request mitgegeben werden.
+ */
 import axios from 'axios';
 
 const instance = axios.create({

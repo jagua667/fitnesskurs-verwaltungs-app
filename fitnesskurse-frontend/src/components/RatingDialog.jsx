@@ -1,3 +1,32 @@
+/**
+ * RatingDialog – Dialog zur Kursbewertung durch Nutzer
+ *
+ * Diese Komponente zeigt einen modalen Dialog, in dem Nutzer einen Kurs mit Sternen bewerten
+ * und optional einen Kommentar hinterlassen können.
+ *
+ * Props:
+ * - open (boolean): Steuert die Sichtbarkeit des Dialogs
+ * - course (object): Der Kurs, der bewertet werden soll (muss mindestens ein `name`-Attribut besitzen)
+ * - onClose (function): Wird beim Schließen des Dialogs aufgerufen
+ * - onSubmit (function): Wird mit (course, review) aufgerufen, sobald der Nutzer eine Bewertung sendet
+ *
+ * Review-Format:
+ * {
+ *   stars: number,               // Bewertungssterne (1–5)
+ *   comment: string,             // Optionaler Kommentar
+ *   date: string (de-DE format)  // Datum der Bewertung
+ * }
+ *
+ * Verhalten:
+ * - Beim Öffnen wird der Zustand (Rating, Kommentar, Status) zurückgesetzt
+ * - Nach erfolgreicher Bewertung wird eine Dankesnachricht angezeigt
+ * - Der Absende-Button ist deaktiviert, solange keine Sterne ausgewählt wurden
+ *
+ * Hinweis:
+ * - Die Komponente ist für die Verwendung innerhalb eines Kurskontextes gedacht
+ * - `course` muss gesetzt sein – ansonsten wird `null` gerendert
+ */
+
 import React, { useState, useEffect } from 'react';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';

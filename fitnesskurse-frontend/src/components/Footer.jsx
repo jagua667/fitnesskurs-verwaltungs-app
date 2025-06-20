@@ -1,3 +1,12 @@
+/**
+ * Footer - Einfacher Footer-Komponent
+ *
+ * Anzeige:
+ * - Copyright-Hinweis mit aktuellem Jahr und Firmennamen "Fitnesskurse"
+ *
+ * Verwendung:
+ * <Footer />
+ */
 
 const Footer = () => (
   <footer>

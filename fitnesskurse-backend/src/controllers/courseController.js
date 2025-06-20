@@ -2,6 +2,11 @@ const { Parser } = require('json2csv');
 const pool = require('../db'); // Verbindung zur Datenbank
 const { parseISO, addWeeks, isBefore } = require('date-fns');
 
+/**
+ * Alle Kurse abrufen und zusammen mit Bewertungen zurückgeben
+ * - Kursdetails mit durchschnittlicher Bewertung und Anzahl der Bewertungen
+ * - Kurse nach Startzeit sortiert zurückgeben
+ */
 exports.getAllCourses = async (req, res) => {
   try {
     const result = await pool.query(`
@@ -29,7 +34,7 @@ exports.getAllCourses = async (req, res) => {
       id: course.id,
       name: course.title,
       description: course.description,
-      date: course.start_time ? course.start_time.toISOString().split("T")[0] : "unbekannt",
+      date: course.start999999_time ? course.start_time.toISOString().split("T")[0] : "unbekannt",
       time: (course.start_time && course.end_time)
         ? `${course.start_time.toTimeString().slice(0, 5)} - ${course.end_time.toTimeString().slice(0, 5)}`
         : "unbekannt",
@@ -51,6 +56,11 @@ exports.getAllCourses = async (req, res) => {
   }
 };
 
+/**
+ * Einen Kurs anhand der Kurs-ID abrufen
+ * - Gibt den Kurs zurück, wenn er existiert
+ * - 404 wenn nicht gefunden
+ */
 exports.getCourseById = async (req, res) => {
   const { id } = req.params;
   try {
@@ -62,34 +72,12 @@ exports.getCourseById = async (req, res) => {
   }
 };
 
-/*
-exports.createCourse = async (req, res) => {
-  const {
-    title,
-    description,
-    start_time,
-    end_time,
-    location,
-    max_capacity,
-    repeat_until 
-  } = req.body;
-
-  const trainer_id = req.user.id;
-
-  try {
-    const result = await pool.query(
-      `INSERT INTO courses 
-      (title, description, start_time, end_time, location, max_capacity, trainer_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING *`,
-      [title, description, start_time, end_time, location, max_capacity, trainer_id]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Fehler beim Erstellen des Kurses' });
-  }
-};*/
+/**
+ * Einen neuen Kurs anlegen
+ * - Erwartet alle relevanten Kursdaten im Request Body
+ * - Der angemeldete Nutzer wird als Trainer gespeichert (trainer_id)
+ * - Gibt den neu angelegten Kurs als Antwort zurück
+ */
 exports.createCourse = async (req, res) => {
   const {
     title,
@@ -119,6 +107,12 @@ exports.createCourse = async (req, res) => {
   }
 };
 
+/**
+ * Einen bestehenden Kurs aktualisieren
+ * - Aktualisiert Kursfelder basierend auf der Kurs-ID (URL-Parameter)
+ * - Gibt den aktualisierten Kurs zurück
+ * - 404 wenn Kurs nicht gefunden
+ */
 exports.updateCourse = async (req, res) => {
   const { id } = req.params;
   const {
@@ -155,6 +149,12 @@ exports.updateCourse = async (req, res) => {
   }
 };
 
+/**
+ * Einen Kurs löschen
+ * - Löscht den Kurs basierend auf der Kurs-ID (URL-Parameter)
+ * - Gibt eine Bestätigung bei Erfolg zurück
+ * - 404 wenn Kurs nicht gefunden
+ */
 exports.deleteCourse = async (req, res) => {
   const { id } = req.params;
   try {
@@ -166,20 +166,25 @@ exports.deleteCourse = async (req, res) => {
   }
 };
 
+/**
+ * Kurse als CSV exportieren
+ * - Exportiert alle Kurse aus der Datenbank
+ * - Sendet CSV-Datei als Download an den Client
+ */
 exports.exportCourses = async (req, res) => {
   try {
-    // Holen der Kursdaten aus der Datenbank
+    // Kurse aus DB holen
     const result = await pool.query('SELECT * FROM courses');
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Keine Kurse gefunden.' });
     }
 
-    // Umwandlung der JSON-Daten in CSV
+    // JSON in CSV konvertieren
     const json2csvParser = new Parser();
     const csv = json2csvParser.parse(result.rows);
 
-    // Setze Header für den Download
+    // Response-Header setzen für CSV-Download
     res.header('Content-Type', 'text/csv');
     res.attachment('courses.csv');
     res.send(csv); // CSV-Daten als Antwort senden

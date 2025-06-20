@@ -1,10 +1,30 @@
+/**
+ * userController.js
+ *
+ * Enthält Funktionen für die Benutzerverwaltung:
+ * - Registrierung eines neuen Benutzers mit Passwort-Hashing
+ * - Benutzer-Login mit Passwortprüfung und JWT-Token-Ausgabe
+ * - Rollenänderung (nur durch Admins erlaubt)
+ * - Logout durch Session-Löschung in der Datenbank
+ *
+ * Verwendete Technologien:
+ * - PostgreSQL (via pg-Pool)
+ * - bcryptjs (Passwort-Hashing)
+ * - jsonwebtoken (JWT für Authentifizierung)
+ * - uuid (für Session-IDs)
+ *
+ * Erwartete Umgebungsvariablen:
+ * - DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_PORT (für DB-Verbindung)
+ * - JWT_SECRET (für JWT-Signatur)
+ */
+
 const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { Pool } = require("pg");
 require("dotenv").config();
 
-// DB-Verbindung
+// Datenbankverbindung initialisieren
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -13,7 +33,12 @@ const pool = new Pool({
     port: process.env.DB_PORT,
 });
 
-// Registrierung eines neuen Benutzers
+/**
+ * Registrierung eines neuen Benutzers
+ * - Prüft, ob E-Mail schon existiert
+ * - Hasht das Passwort mit bcrypt
+ * - Fügt den Nutzer in die DB ein
+ */
 const registerUser = async (req, res) => {
     const { name, email, password, role } = req.body;
     const normalizedRole = role?.toLowerCase() || "kunde";
@@ -41,7 +66,12 @@ const registerUser = async (req, res) => {
     }
 };
 
-// Benutzer-Login
+/**
+ * Benutzer-Login
+ * - Überprüft E-Mail und Passwort
+ * - Prüft, ob Nutzer gesperrt ist
+ * - Erstellt JWT mit Session-ID (UUID)
+ */
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
@@ -73,15 +103,7 @@ const loginUser = async (req, res) => {
 
         const userId = user.rows[0].id;
 
-        /*
-             
-                await pool.query(
-                  'INSERT INTO sessions (id, user_id) VALUES ($1, $2)',
-                  [sessionId, userId]
-                );
-                        const sessionId = uuidv4();
-        */
-        // sessionId abrufen oder neu erstellen
+      // Prüfen, ob schon eine Session existiert, ansonsten neue erstellen
         let sessionId;
         const existingSession = await pool.query(
           'SELECT id FROM sessions WHERE user_id = $1 LIMIT 1',
@@ -123,7 +145,9 @@ const loginUser = async (req, res) => {
     }
 };
   
-// Rolle ändern (nur Admin)
+/**
+ * Rolle eines Benutzers ändern (nur Admin)
+ */
 const updateRole = async (req, res) => {
     if (req.user.role !== "admin") {
         return res.status(403).json({ message: "Zugriff verweigert" });
@@ -140,6 +164,11 @@ const updateRole = async (req, res) => {
     }
 };
 
+
+/**
+ * Logout eines Benutzers
+ * - Löscht die Session aus der Datenbank
+ */
 const logoutUser = async (req, res) => {
   const userId = req.user.id;
 

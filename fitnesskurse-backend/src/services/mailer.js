@@ -1,4 +1,24 @@
 // src/services/mailer.js
+
+/**
+ * Service zum Versenden von E-Mails mit nodemailer.
+ * 
+ * Konfiguration:
+ * - Verwendet Gmail als SMTP-Service.
+ * - SMTP-Zugangsdaten über Umgebungsvariablen EMAIL_USER und EMAIL_PASS.
+ * 
+ * Funktionen:
+ * - sendEmail(to, subject, text): Senden einer einfachen E-Mail.
+ * - Spezialisierte Funktionen für Buchungs- und Stornierungs-Mails an Kunden und Trainer.
+ * 
+ * Beispielaufruf (automatisch beim Laden des Moduls):
+ * sendEmail('deine.email@example.com', 'Testmail', 'Das ist ein Test aus meiner App');
+ * 
+ * Formatierte Mailtexte:
+ * - Buchungsbestätigung für Kunde und Trainer.
+ * - Stornierungsbestätigung für Kunde und Trainer.
+ */
+
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
@@ -25,14 +45,12 @@ const sendEmail = async (to, subject, text) => {
 };
 
 
-// Füge dies in deiner mailer.js oben oder unten ein
+// Test-Mail (optional, wird beim Laden des Moduls gesendet)
 const testEmail = 'claudia.niederhofer1804@gmail.com';  // Deine eigene Gmail-Adresse
-
-// Test-Mail senden
 sendEmail(testEmail, 'Testmail', 'Das ist ein Test aus meiner App');
 
 
-// 📧 Funktionen für verschiedene Mails
+// Vorlagen für E-Mail-Texte
 const formatBookingText = (data) => (
   `Hallo ${data.name},\n\n` +
   `Du hast den Kurs "${data.course}" am ${data.date} um ${data.time} Uhr mit Trainer ${data.trainer} erfolgreich gebucht.\n\n` +
@@ -55,6 +73,8 @@ const formatTrainerCancellationText = (data) => (
   `${data.user} hat den Kurs "${data.course}" am ${data.date} um ${data.time} Uhr abgesagt.`
 );
 
+
+// Exportierte Funktionen für andere Module
 module.exports = {
   sendBookingEmailToCustomer: (to, data) =>
     sendEmail(to, 'Buchungsbestätigung', formatBookingText(data)),

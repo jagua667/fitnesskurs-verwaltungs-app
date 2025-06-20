@@ -17,23 +17,24 @@ const NewRatings = () => {
   const navigate = useNavigate();  // Korrekt innerhalb des Components verwenden
 
   useEffect(() => {
-    // Beispiel-Daten, hier könntest du später eine API verwenden
-    setRatings([
-      {
-        id: 1,
-        course: 'React Kurs',
-        user: 'Max Mustermann',
-        rating: 5,
-        comment: 'Sehr gut!',
-      },
-      {
-        id: 2,
-        course: 'Vue Kurs',
-        user: 'Erika Mustermann',
-        rating: 4,
-        comment: 'Gut, aber etwas schwierig.',
-      },
-    ]);
+    const fetchRatings = async () => {
+      try {
+        const response = await fetch('/api/admin/newRatings', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+
+        if (!response.ok) throw new Error("Fehler beim Laden der Bewertungen");
+
+        const data = await response.json();
+        setRatings(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchRatings();
   }, []);
 
   return (
@@ -72,8 +73,8 @@ const NewRatings = () => {
         ))}
       </Grid>
 
-      {/* Button für mehr Details */}
-      <Grid container spacing={4} style={{ marginTop: '40px' }}>
+      {/* Optionaler Button zur Navigation */}
+      {/* <Grid container spacing={4} style={{ marginTop: '40px' }}>
         <Grid item xs={12}>
           <Button
             variant="contained"
@@ -84,7 +85,7 @@ const NewRatings = () => {
             Mehr Details anzeigen
           </Button>
         </Grid>
-      </Grid>
+      </Grid> */}
     </div>
   );
 };

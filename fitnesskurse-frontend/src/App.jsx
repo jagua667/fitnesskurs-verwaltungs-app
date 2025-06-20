@@ -1,3 +1,16 @@
+/**
+ * Haupt-App-Komponente mit Routing und Theme-Provider.
+ * 
+ * - Verwendet Material-UI ThemeProvider für konsistente Farben und Typografie.
+ * - AuthProvider stellt den Authentifizierungs-Kontext bereit.
+ * - React Router definiert alle Routen der App.
+ * - ProtectedRoute-Komponente schützt Seiten je nach Benutzerrolle:
+ *   - Admin: Zugriff auf Dashboard, User-Management, Bewertungen, Kurse
+ *   - Trainer: Zugriff auf Trainer-Dashboard, Buchungen, Bewertungen
+ *   - Kunde: Zugriff auf Kursübersicht, eigene Buchungen, Bewertungen
+ * - Unbekannte oder nicht autorisierte Zugriffe werden mit passenden Fehlermeldungen abgefangen.
+ */
+
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
@@ -84,7 +97,7 @@ function App() {
 
 
           <Route
-            path="/dashboard/admin/ratings"
+            path="/dashboard/admin/newRatings"
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <Layout>

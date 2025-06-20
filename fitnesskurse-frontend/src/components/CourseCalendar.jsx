@@ -1,3 +1,31 @@
+/**
+ * CourseCalendar Komponente
+ * 
+ * Zeigt einen Monats-Kalender mit Kursen an, unterstützt wiederkehrende Events (Recurring Events).
+ * 
+ * Features:
+ * - Nutzt FullCalendar mit dayGrid (Monatsübersicht) und rrule (wiederkehrende Events)
+ * - Angepasste Darstellung der Events inkl. Titel, Raum und Teilnehmeranzahl
+ * - Klick auf Event öffnet Dialog mit Teilnehmerliste
+ * - Styling via Emotion Global Styles
+ * 
+ * Props:
+ * - events: Array von Event-Objekten mit optionalen Feldern
+ *   - title: String, Eventtitel (Kursname)
+ *   - rrule: RRule Objekt (für Wiederholung)
+ *   - extendedProps: Objekt mit weiteren Infos wie
+ *     - room: String, Raum
+ *     - participant: Array von Teilnehmernamen
+ * 
+ * State:
+ * - dialogOpen: Boolean, steuert Anzeige des Dialogs
+ * - selectedEvent: Das aktuell ausgewählte Event für Details
+ * 
+ * Wichtig:
+ * - Event-Objekte müssen für Wiederholung die rrule-Spezifikation enthalten
+ * - Teilnehmerliste wird im Dialog angezeigt
+ */
+
 import React, { useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -17,26 +45,9 @@ import IconButton from '@mui/material/IconButton';
 const CourseCalendar = ({ events }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-
-  /*const recurringEvents = mockCourses.map((course) => {
-    const [startTime] = course.time.split(' - ');
-    const startDateTime = `${course.date}T${startTime}`;
-
-    return {
-      title: `${course.name} mit ${course.trainer}`,
-      rrule: {
-        freq: 'weekly',
-        interval: 1,
-        dtstart: startDateTime,
-      },
-      duration: '01:00',
-      extendedProps: {
-        room: course.room,
-        participant: course.teilnehmer,
-      },
-    };
-  });*/
   const recurringEvents = events;
+
+  // Wiederkehrende Events kommen als props (events)
 
   return (
     <div>

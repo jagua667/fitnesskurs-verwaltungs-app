@@ -1,6 +1,25 @@
+// middleware/auth.js
+
+/**
+ * Authentifizierungs- & Autorisierungs-Middleware
+ * 
+ * Diese Middleware schützt Routen vor unberechtigtem Zugriff.
+ * Sie prüft das übermittelte JWT-Token, stellt sicher, dass der Benutzer nicht gesperrt ist,
+ * und erlaubt optional rollenbasierte Zugriffskontrolle.
+ */
+
 const pool = require('../db');
 const jwt = require("jsonwebtoken");
 
+/**
+ * Middleware zur Authentifizierung über ein JWT-Token.
+ * 
+ * - Erwartet ein "Authorization"-Header im Format: Bearer <TOKEN>
+ * - Verifiziert das Token mit dem geheimen Schlüssel (JWT_SECRET)
+ * - Prüft, ob der Benutzer existiert und nicht gesperrt ist (user.locked)
+ * - Falls eine Session-ID im Token vorhanden ist, wird die letzte Aktivität aktualisiert
+ * - Setzt `req.user` mit den im Token enthaltenen Benutzerdaten
+ */
 const authenticateToken = async (req, res, next) => {
     const token = req.headers.authorization || req.header("Authorization");
     if (!token || !token.startsWith("Bearer ")) {
@@ -10,9 +29,11 @@ const authenticateToken = async (req, res, next) => {
 
     try {
         console.log("Authorization Header:", req.headers.authorization);
+    
+        // Token verifizieren
         const decoded = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET);
 
-        // Extra DB-Check für `locked`
+        // Benutzer aus der Datenbank holen, um Sperrstatus zu prüfen 
         const userRes = await pool.query("SELECT id, locked FROM users WHERE id = $1", [decoded.id]);
         const user = userRes.rows[0];
 
@@ -20,8 +41,10 @@ const authenticateToken = async (req, res, next) => {
           return res.status(403).json({ message: "Benutzer ist gesperrt (oder existiert nicht)" });
         }
 
+        // Benutzerdaten für nachfolgende Middleware verfügbar machen
         req.user = decoded;
 
+        // Optional: Session-Aktivität aktualisieren
         if (decoded.sessionId) {
           console.log("Session-ID: ", decoded.sessionId);
           try {
@@ -38,7 +61,15 @@ const authenticateToken = async (req, res, next) => {
     }
 };
 
-// ⬇️ NEU: Rollenbasiertes Middleware-Feature
+/**
+ * Rollenbasierte Zugriffskontrolle
+ * 
+ * @param {Array<string>} roles - Liste erlaubter Rollen (z. B. ["admin", "trainer"])
+ * 
+ * Nutze diese Middleware nach `authenticateToken`, um den Zugriff auf bestimmte Rollen zu beschränken.
+ * Beispiel:
+ *    router.get('/admin', authenticateToken, authorizeRole(['admin']), handler);
+ */
 const authorizeRole = (roles) => {
     return (req, res, next) => {
         console.log("Benutzerrolle:", req.user.role); // Debugging: Logge die Benutzerrolle

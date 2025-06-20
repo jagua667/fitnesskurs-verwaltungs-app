@@ -1,3 +1,21 @@
+/**
+ * BookingItem Komponente
+ * 
+ * Zeigt eine einzelne Kursbuchung an mit:
+ * - Kursname, Datum, Uhrzeit und Ort
+ * - Feste Bewertung (4 Sterne als Platzhalter)
+ * - Button "Stornieren" für zukünftige Buchungen (isPast === false)
+ * - Button "Kurs bewerten" für vergangene Buchungen (isPast === true)
+ * 
+ * Props:
+ * - booking: Objekt mit Buchungsdaten (course, date, time, location, id)
+ * - onCancel: Callback, wird aufgerufen mit booking.id beim Stornieren
+ * - isPast: Boolean, zeigt an ob der Kurs bereits vorbei ist
+ * - onRate: Callback, wird aufgerufen mit booking, um Bewertung zu starten
+ * 
+ * Enthält auch renderStars Funktion, um Sterne-SVGs dynamisch zu rendern.
+ */
+
 import React from 'react';
 import {
   ListItem,

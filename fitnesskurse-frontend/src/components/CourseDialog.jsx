@@ -1,3 +1,37 @@
+/**
+ * CourseDialog Komponente
+ * 
+ * Zeigt einen Dialog mit Details zu einem Kurs an, inklusive:
+ * - Kursname, Beschreibung, Bewertung und Bewertungskommentare
+ * - Kurszeit und Datum, formatiert nach deutschem Standard
+ * - Informationen zum Kursstudio und Raum
+ * - Adresse mit Link zu Google Maps (aktuell als Platzhalterbild)
+ * - Buchungsfunktion (Online buchen)
+ * - Bewertung abgeben (Sternebewertung + Kommentar) - aktuell nicht im UI eingebaut, aber vorbereitet
+ * 
+ * Props:
+ * - course: Kurs-Objekt mit allen relevanten Daten (name, description, rating, rating_count, reviews, start_time, end_time, address, studio, room, id, time)
+ * - onClose: Callback, um den Dialog zu schließen
+ * - onSubmitRating: Callback zum Übermitteln einer Bewertung (courseId, review) — wird intern verwendet, UI noch erweiterbar
+ * - onShowReviews: Callback zum Anzeigen der Bewertungen, z.B. als Liste
+ * 
+ * Zustand:
+ * - rating: aktuelle Bewertung, die der Nutzer abgeben möchte
+ * - comment: optionaler Kommentar zur Bewertung
+ * - submitted: Flag, ob Bewertung bereits abgeschickt wurde
+ * - isBooking: Flag, ob Buchung aktuell läuft (zur UI-Feedbacksteuerung)
+ * 
+ * Funktionen:
+ * - handleSubmit: Validiert und übermittelt Bewertung über onSubmitRating
+ * - handleBooking: Führt Buchungs-API-Call aus, zeigt Alerts für Erfolg/Fehler und nutzt tokenbasiertes Auth-System
+ * 
+ * Besonderheiten:
+ * - Formatiert Datum und Uhrzeit mit toLocaleDateString/-TimeString (de-DE)
+ * - Zeigt Google Maps Link (bzw. Karte) an — derzeit als statisches Bild, da Google Maps API Nutzung kostenpflichtig werden kann
+ * - Nutzt MUI Komponenten für Layout und Stil
+ * - Validiert, ob Kursdaten vorhanden sind, ansonsten kein Dialog-Render
+ */
+
 import React, { useState } from "react";
 import {
   Dialog,
@@ -159,32 +193,9 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
 
           <Typography variant="body2" mb={1}>Raum: {room}</Typography>
 
-          {/*
-          <Box>
-            <Link
-              href={mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              underline="hover"
-              sx={{ whiteSpace: "pre-line" }} // sorgt dafür, dass \n als Zeilenumbruch dargestellt wird
-            >
-              {fullAddress}
-            </Link>
-          </Box>
-          
-          <Box mt={2} sx={{ width: "100%", height: 200, borderRadius: 1, overflow: "hidden" }}>
-            <iframe
-              title="Kursort Karte"
-              width="100%"
-              height="100%"
-              frameBorder="0"
-              style={{ border: 0 }}
-              src={`https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${mapsQuery}`}
-              allowFullScreen
-            />
-          </Box>
+         {/* 
+            Google Maps Link und Karte auskommentiert, stattdessen Platzhalterbild genutzt
           */}
-          {/* Platzhalter anstatt der eingebetteten Google Maps, da Google Maps Karten API ab einem bestimmten Nutzungspunkt kostenpflichtig ist */}
             <Box>{fullAddress}</Box>
             <Box
               mt={2}

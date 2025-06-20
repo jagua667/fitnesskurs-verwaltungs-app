@@ -1,3 +1,25 @@
+/**
+ * Layout-Komponente für die App-Struktur
+ *
+ * Verantwortlich für die Grundstruktur der Seite mit:
+ * - Navbar (oben)
+ * - Sidebar (links)
+ * - Hauptinhalt (rechts von der Sidebar, unter der Navbar)
+ *
+ * Die Sidebar zeigt je nach Benutzerrolle (Kunde, Trainer) unterschiedliche Menüpunkte an.
+ *
+ * Props:
+ * - children: React-Knoten, die im Hauptbereich angezeigt werden
+ *
+ * Interne Konstanten:
+ * - drawerWidth: Breite der Sidebar (240px)
+ * - navbarHeight: Höhe der Navbar (64px)
+ *
+ * Verwendung:
+ * Die Komponente sorgt dafür, dass Navbar und Sidebar fest positioniert sind und
+ * der Hauptinhalt den restlichen Platz einnimmt, mit entsprechenden Abständen.
+ */
+
 import React from "react";
 import { Box } from "@mui/material";
 import Sidebar from "./Sidebar";

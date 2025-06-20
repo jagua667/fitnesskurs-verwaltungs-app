@@ -1,3 +1,12 @@
+/**
+ * Einstiegspunkt der React-Anwendung.
+ * 
+ * Lädt die Roboto-Schriftart und rendert die App-Komponente
+ * innerhalb eines React StrictMode und React Router Browsers.
+ *
+ * - React.StrictMode aktiviert zusätzliche Checks und Warnungen.
+ * - BrowserRouter sorgt für client-seitiges Routing.
+ */
 console.log("main.jsx wurde geladen!");
 
 import '@fontsource/roboto';

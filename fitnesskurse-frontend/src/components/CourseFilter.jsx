@@ -1,3 +1,30 @@
+/**
+ * CourseFilter Komponente
+ * 
+ * Ermöglicht das Filtern von Kursen nach Zeit-Slots, Trainern und Studios.
+ * 
+ * Funktion:
+ * - Lädt verfügbare Trainer und Standorte von APIs via axios beim Mount
+ * - Zeigt auswählbare Filteroptionen für Zeiten, Trainer und Studios (Räume)
+ * - Verwaltet Filterzustände über Props und Callbacks
+ * - Bietet eine Schaltfläche, um die Filter anzuwenden (z.B. Suchergebnis aktualisieren)
+ * 
+ * Props:
+ * - filterTimes: Array mit aktuell ausgewählten Zeit-Slots (z.B. ["Vormittag", "Abend"])
+ * - filterRooms: Array mit aktuell ausgewählten Studios/Räumen
+ * - filterTrainers: Array mit aktuell ausgewählten Trainer-IDs
+ * - setFilterTimes: Setter-Funktion, um ausgewählte Zeit-Slots zu aktualisieren
+ * - setFilterRooms: Setter-Funktion, um ausgewählte Studios zu aktualisieren
+ * - setFilterTrainers: Setter-Funktion, um ausgewählte Trainer zu aktualisieren
+ * - onApply: Callback-Funktion, die ausgeführt wird, wenn der Nutzer auf "Ergebnisse anzeigen" klickt
+ * - onClose: Callback-Funktion zum Schließen des Filterdialogs
+ * 
+ * Intern:
+ * - Zeit-Slots sind statisch definiert (Vormittag, Mittag, Nachmittag, Abend)
+ * - Trainer und Räume werden bei Initialisierung via API geladen
+ * - ToggleButton ist eine wiederverwendbare Komponente zur Auswahl/Abwahl von Filtern
+ */
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -25,9 +52,11 @@ const CourseFilter = ({
   onApply,
   onClose,
 }) => {
+  // State für geladene Trainer und Standorte
   const [availableTrainers, setAvailableTrainers] = useState([]);
   const [availableLocations, setAvailableLocations] = useState([]);
 
+  // Daten vom Backend laden (Trainer, Studios)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -45,11 +74,12 @@ const CourseFilter = ({
     fetchData();
   }, []);
 
+  // Hilfsfunktion: Ein-/Auswahl eines Items toggeln
   const toggleItem = (item, list, setter) => {
     setter(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
   };
 
-  // Wiederverwendbare Toggle-Schaltfläche
+  // Wiederverwendbare Toggle-Schaltfläche für Filteroptionen
   const ToggleButton = ({
     label,
     selected,

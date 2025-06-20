@@ -1,3 +1,36 @@
+/**
+ * Sidebar – Navigationsleiste für verschiedene Benutzerrollen
+ *
+ * Diese Komponente rendert eine vertikale Sidebar mit Navigationslinks,
+ * die abhängig von der Rolle des aktuell eingeloggten Nutzers angepasst werden.
+ * 
+ * Rollenbasierte Menüpunkte:
+ * - `admin`: Zugriff auf Admin-Dashboard, Kursverwaltung, Benutzerverwaltung, Bewertungen
+ * - `trainer`: Zugriff auf das Trainer-Dashboard
+ * - `kunde`: Zugriff auf Kurse und eigene Buchungen
+ *
+ * Authentifizierung:
+ * - Nutzt `useAuth()` aus dem AuthContext, um den eingeloggten Benutzer zu ermitteln
+ * - Falls der Benutzer noch lädt oder nicht vorhanden ist, wird `null` zurückgegeben
+ * - Das `logout`-Verhalten wird über einen eigenen Menüeintrag gesteuert
+ *
+ * Styling:
+ * - Fixe Breite (`drawerWidth`) und fixe Position links
+ * - Aktiver Link wird farblich hervorgehoben (`&.active`)
+ * - Icons und Links nutzen MUI-Komponenten (`List`, `ListItemButton`, `ListItemIcon`, `ListItemText`)
+ * 
+ * Verwendete Icons (abhängig von Rolle):
+ * - `HomeIcon`, `ListIcon`, `CalendarMonthIcon`, `PeopleIcon`, `StarRateIcon`, `LogoutIcon` usw.
+ *
+ * Besonderheiten:
+ * - Das Menü wird dynamisch auf Basis der `user.role` generiert
+ * - Styling erfolgt über `sx`-Props (`navItemStyle`, `iconStyle`)
+ *
+ * Hinweise:
+ * - Der Logout-Button ist unabhängig von der Rolle immer vorhanden
+ * - Die Komponente setzt voraus, dass React Router (`NavLink`) und MUI verwendet werden
+ */
+
 import React from "react";
 import {
   Box,
@@ -28,7 +61,7 @@ const menuItemsByRole = {
     { label: 'Admin Dashboard', path: '/dashboard/admin', icon: <HomeIcon /> },
     { label: 'Alle Kurse', path: '/dashboard/admin/courses', icon: <ListIcon /> },
     { label: 'Benutzerverwaltung', path: '/dashboard/admin/users', icon: <PeopleIcon /> },
-    { label: 'Neue Bewertungen', path: '/dashboard/admin/ratings', icon: <StarRateIcon /> },
+    { label: 'Neue Bewertungen', path: '/dashboard/admin/newRatings', icon: <StarRateIcon /> },
   ],
   trainer: [
     { label: 'Trainer Dashboard', path: '/dashboard/trainer', icon: <HomeIcon /> },

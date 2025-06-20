@@ -1,7 +1,43 @@
+/**
+ * server.js
+ *
+ * Startpunkt der Webanwendung für die Verwaltung von Fitnesskursen.
+ * Diese Datei konfiguriert Express, verbindet sich mit der PostgreSQL-Datenbank,
+ * richtet alle API-Routen ein und startet den HTTP-Server.
+ *
+ * Verwendete Technologien:
+ * - Express (API-Server)
+ * - PostgreSQL (Datenbank, via pg-Pool)
+ * - CORS (Cross-Origin-Requests erlauben)
+ * - Nodemailer (Versand von Benachrichtigungs-E-Mails)
+ * - .env (Konfiguration über Umgebungsvariablen)
+ *
+ * API-Routen (via /api/*):
+ * - /auth: Registrierung und Login
+ * - /bookings: Kursbuchungen
+ * - /courses: Kursinformationen
+ * - /trainer: Trainerverwaltung
+ * - /ratings: Kursbewertungen
+ * - /fitnesscourses: (ggf. entfernen oder vereinheitlichen)
+ *
+ * Startbefehl:
+ *    node server.js
+ *
+ * Erwartete Umgebungsvariablen (.env):
+ * - DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_PORT
+ * - EMAIL_USER, EMAIL_PASS
+ * - PORT (optional)
+ */
+
 require('dotenv').config();
 
 const express = require("express");
 const cors = require("cors");
+
+// Swagger-Dokumentation
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./swagger');
+
 const { bookCourse, cancelBooking } = require('./controllers/bookingController');
 
 console.log("🔥 Server wird gestartet!");
@@ -10,6 +46,7 @@ const app = express(); // ✅ App wird hier zuerst erstellt
 // PostgreSQL-Verbindung
 const pool = require("./db");
 
+// Datenbankverbindung testen
 console.log("Geladener DB-Benutzer: ", process.env.DB_USER);
 console.log("Geladenes DB-Passwort: ", process.env.DB_PASSWORD);
 console.log("🚀 Starte Verbindung zur Datenbank...");
@@ -22,7 +59,7 @@ pool.connect()
   })
   .catch(err => console.error("❌ Fehler bei der DB-Verbindung:", err));
 
-// Middleware
+// Middleware aktivieren für JSON-Parsing und CORS
 app.use(express.json());
 app.use(cors({
   origin: 'http://localhost:5173',  // Frontend-URL
@@ -31,11 +68,13 @@ app.use(cors({
 // Authentifizierungs- und Rollen-Middleware importieren
 const { authenticateToken, authorizeRole } = require('./middleware/authMiddleware');
 
-// Fitnesskurs-Routen (TODO: Warum haben wir sowohl fitnesscourses as auch courses? Brauchen wir beide?)
-const fitnessCourseRoutes = require("./routes/fitnessCourseRoutes");
-app.use("/api/fitnesscourses", fitnessCourseRoutes);
+// Route zum Ausliefern der Swagger JSON-
+app.get('/swagger.json', (req, res) => {
+  res.json(swaggerSpec);
+});
 
-//Kurs-Routen
+// API-Routen einbinden
+// Verwaltet Kurse mit allgemeinen Infos (z. B. Titel, Beschreibung, Zeitplan)
 const courseRoutes = require('./routes/courseRoutes');
 app.use('/api/courses', courseRoutes);
 
@@ -53,7 +92,7 @@ app.use('/api', metaRoutes);
 
 // Buchungs-Routen
 const bookingRoutes = require('./routes/bookingRoutes');
-console.log("📦 bookingRoutes geladen"); 
+console.log("📦 bookingRoutes geladen");
 app.use('/api/bookings', bookingRoutes);
 
 //Ratings-Routen
@@ -63,6 +102,9 @@ app.use('/api/ratings', ratingsRouter); // Alle Routen aus ratings.js unter /api
 // Authentifizierungs-Routen
 const authRoutes = require("./routes/authRoutes"); // Importiere die Authentifizierungsrouten
 app.use("/api/auth", authRoutes); // Routen für Registrierung und Login unter /api/auth
+
+// Swagger UI unter /api-docs bereitstellen
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const nodemailer = require('nodemailer');
 
@@ -92,7 +134,10 @@ const sendEmail = async (to, subject, text) => {
 
 // Server starten
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Server läuft auf Port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server läuft auf Port ${PORT}`);
+  console.log(`Swagger-Dokumentation läuft unter http://localhost:${PORT}/api-docs`);
+});
 
 module.exports = { app, pool };
 

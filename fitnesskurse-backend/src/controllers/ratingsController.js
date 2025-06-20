@@ -1,7 +1,14 @@
 const { Parser } = require('json2csv');
 const db = require('../db'); // Datenbank-Verbindung
 
-// Bewertungen für einen Kurs abrufen
+/**
+ * Bewertungen für einen bestimmten Kurs abrufen.
+ * @param req Express Request-Objekt mit courseId als URL-Parameter.
+ * @param res Express Response-Objekt.
+ * 
+ * Funktion holt alle Bewertungen zu einem Kurs, inklusive Name des bewertenden Nutzers,
+ * und gibt diese als JSON an den Client zurück.
+ */
 const getRatingsByCourseId = async (req, res) => {
   const { courseId } = req.params;
 
@@ -10,13 +17,22 @@ const getRatingsByCourseId = async (req, res) => {
       'SELECT r.*, u.name AS user_name FROM ratings r JOIN users u ON r.user_id = u.id WHERE r.course_id = $1',
       [courseId]
     );
-    res.json(result.rows); // Gibt alle Bewertungen zurück
+    // Rückgabe der rohen Bewertungsdaten aus der DB (inkl. Nutzername)
+    res.json(result.rows); 
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Serverfehler' });
   }
 };
 
+/**
+ * Bewertungen aller Kurse eines Trainers abrufen.
+ * @param req Express Request-Objekt, Trainer-ID wird aus auth User-Objekt entnommen.
+ * @param res Express Response-Objekt.
+ * 
+ * Holt alle Bewertungen der Kurse, die vom aktuell angemeldeten Trainer angeboten werden.
+ * Gibt diese Bewertungen als JSON zurück.
+ */
 const getRatingsForTrainerCourses = async (req, res) => {
   const trainerId = req.user.id;
   console.log("Trainer ID:", trainerId);
@@ -39,26 +55,34 @@ const getRatingsForTrainerCourses = async (req, res) => {
   }
 };
 
-// Controller zum Exportieren der Bewertungen eines Kurses als CSV
+/**
+ * Bewertungen eines Kurses als CSV-Datei exportieren.
+ * @param req Express Request-Objekt mit courseId als URL-Parameter.
+ * @param res Express Response-Objekt.
+ * 
+ * Funktion lädt alle Bewertungen für einen Kurs aus der Datenbank,
+ * wandelt die Daten in das CSV-Format um und sendet diese Datei als Download an den Client.
+ */
 async function exportRatings(req, res) {
   const { courseId } = req.params;
 
   try {
-    // Holen der Bewertungen für einen bestimmten Kurs aus der Datenbank
+    // Bewertungen aus der Datenbank laden
     const result = await db.query(
       'SELECT r.*, u.name AS user_name FROM ratings r JOIN users u ON r.user_id = u.id WHERE r.course_id = $1',
       [courseId]
     );
 
     if (result.rows.length === 0) {
+      // Falls keine Bewertungen vorhanden sind, 404 zurückgeben
       return res.status(404).json({ message: 'Keine Bewertungen für diesen Kurs gefunden.' });
     }
 
-    // Umwandlung der JSON-Daten in CSV
+    // JSON-Daten in CSV umwandeln
     const json2csvParser = new Parser();
     const csv = json2csvParser.parse(result.rows);
 
-    // Setze Header für den Download
+    // HTTP-Header setzen, um Datei-Download zu ermöglichen
     res.header('Content-Type', 'text/csv');
     res.attachment(`ratings_course_${courseId}.csv`);
     res.send(csv); // CSV-Daten als Antwort senden

@@ -2,9 +2,34 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// Route: Alle Trainernamen abrufen
+/**
+ * @swagger
+ * /api/trainers:
+ *   get:
+ *     summary: Gibt eine Liste aller Trainer mit Kursen zurück
+ *     tags:
+ *       - Allgemein
+ *     responses:
+ *       200:
+ *         description: Erfolgreiche Antwort – Liste der Trainer
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 3
+ *                   name:
+ *                     type: string
+ *                     example: "Max Mustermann"
+ *       500:
+ *         description: Serverfehler beim Abrufen der Trainer
+ */
 router.get('/trainers', async (req, res) => {
-  console.log("📥 Anfrage an /api/trainers");
+  console.log("Anfrage an /api/trainers");
   try {
     const result = await pool.query(`
       SELECT DISTINCT u.id, u.name 
@@ -20,7 +45,26 @@ router.get('/trainers', async (req, res) => {
   }
 });
 
-// Route: Alle Orte / Studios abrufen
+/**
+ * @swagger
+ * /api/locations:
+ *   get:
+ *     summary: Gibt eine Liste aller verwendeten Kursorte (Standorte / Studios) zurück
+ *     tags:
+ *       - Allgemein
+ *     responses:
+ *       200:
+ *         description: Erfolgreiche Antwort – Liste der Orte
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ *                 example: "Berlin Mitte Studio A"
+ *       500:
+ *         description: Serverfehler beim Abrufen der Orte
+ */
 router.get('/locations', async (req, res) => {
   console.log("📥 Anfrage an /api/locations");
   try {

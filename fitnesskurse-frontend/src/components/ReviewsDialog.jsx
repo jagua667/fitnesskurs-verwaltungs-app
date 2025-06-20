@@ -1,3 +1,29 @@
+/**
+ * ReviewsDialog – Dialog zur Anzeige von Kursbewertungen
+ *
+ * Diese Komponente zeigt in einem modalen Dialog alle Bewertungen zu einem bestimmten Kurs an.
+ * Die Bewertungen werden dabei nach Datum absteigend sortiert dargestellt.
+ *
+ * Props:
+ * - course (Object): Das Kursobjekt, das die Bewertungen enthält (course.reviews).
+ * - open (boolean): Steuert, ob der Dialog sichtbar ist.
+ * - onClose (Function): Callback-Funktion, die beim Schließen des Dialogs aufgerufen wird.
+ *
+ * Verhalten:
+ * - Wenn keine Bewertungen vorhanden sind, wird ein Hinweistext angezeigt.
+ * - Ansonsten werden die Bewertungen mit Nutzername, Datum, Sternebewertung und Kommentar
+ *   jeweils in einem eingerahmten Abschnitt dargestellt.
+ *
+ * UI-Komponenten:
+ * - MUI Dialog, DialogTitle, DialogContent, DialogActions
+ * - MUI Rating zur Anzeige der Sterne
+ * - MUI Typography und Box für Struktur und Layout
+ *
+ * Hinweise:
+ * - Bewertungen werden clientseitig nach Datum sortiert (neueste zuerst).
+ * - Die Sternebewertung ist readOnly, da es sich nur um eine Anzeige handelt.
+ */
+
 import React from "react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, Rating } from "@mui/material";
 

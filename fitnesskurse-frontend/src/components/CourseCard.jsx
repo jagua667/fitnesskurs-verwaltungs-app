@@ -1,3 +1,25 @@
+/**
+ * CourseCard Komponente
+ * 
+ * Zeigt eine einzelne Kurskarte mit Name und Zeit an.
+ * 
+ * Features:
+ * - Zeigt bei Hover eine halbtransparente Überlagerung mit dem Text "Online buchen"
+ * - Klick auf die Karte löst die onClick-Funktion mit dem Kurs-Objekt aus
+ * - Anzeige von Sternen kann mit renderStars Funktion erzeugt werden (optional)
+ * 
+ * Props:
+ * - course: Objekt mit Kursdaten (mindestens `name` und `time` erforderlich)
+ * - onClick: Callback-Funktion, die beim Klick auf die Karte mit dem Kurs-Objekt aufgerufen wird
+ * 
+ * Zustand:
+ * - hovered: State, ob Maus über der Karte schwebt (für Hover-Effekt)
+ * 
+ * Wichtig:
+ * - position: relative ist notwendig, damit das Hover-Overlay absolut relativ zur Karte positioniert werden kann
+ * - pointerEvents: none im Overlay sorgt dafür, dass der Hover-Text keinen Klick blockiert
+ */
+
 import React, { useState } from "react";
 import { Box, Typography } from "@mui/material";
 import StarIcon from '@mui/icons-material/Star';
