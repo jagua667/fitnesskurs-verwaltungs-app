@@ -26,7 +26,8 @@ BPP_Fitnesskurse/
 │   ├── node_modules/          Abhängigkeiten
 │   ├── package.json           Frontend-Paketdefinition
 │   └── ...
-├── dump.sql                   Datenbank-Dump zum Importieren
+├── docs/                      Dokumentation und Dumpdateien
+│   └── dump.sql               Datenbank-Dump zum Importieren
 ├── README.md                  Diese Haupt-README-Datei
 └── ...
 ````
@@ -102,7 +103,7 @@ npm run dev
 
  4. Konfiguration (.env)
 
-Alle sensiblen Daten wie Datenbankpasswort, JWT-Secret und E-Mail-Zugangsdaten werden in der `.env` Datei gespeichert und **nicht** ins Git hochgeladen (siehe `.gitignore`).
+Alle sensiblen Daten wie Datenbankpasswort, JWT-Secret und E-Mail-Zugangsdaten werden in der `.env` Datei gespeichert und nicht ins Git hochgeladen (siehe `.gitignore`).
 Bitte die Datei `.env.example` im Backend-Ordner als Vorlage verwenden und mit eigenen Daten füllen.
 
 ---
