@@ -32,6 +32,7 @@
 require('dotenv').config();
 
 const express = require("express");
+const bodyParser = require('body-parser');
 const cors = require("cors");
 
 // Swagger-Dokumentation
@@ -132,10 +133,22 @@ const sendEmail = async (to, subject, text) => {
   }
 };
 
-// Server starten
+const http = require('http'); 
+const WebSocketContext = require('./websocket/WebSocketContext'); 
+
+// Portnummer ermitteln oder auf den Standardwert setzen
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server läuft auf Port ${PORT}`);
+
+// 1. Erstelle einen HTTP-Server, der die Express-App verwendet
+const server = http.createServer(app);
+
+// 2. Initialisiere Socket.IO und lade die aktive Strategie
+// Dies übergibt den HTTP-Server an den WebSocket-Kontext
+WebSocketContext.init(server); 
+
+// 3. Starte den gemeinsamen HTTP/WebSocket-Server
+server.listen(PORT, () => { 
+  console.log(`[HTTP/WS] Server läuft auf Port ${PORT}`);
   console.log(`Swagger-Dokumentation läuft unter http://localhost:${PORT}/api-docs`);
 });
 

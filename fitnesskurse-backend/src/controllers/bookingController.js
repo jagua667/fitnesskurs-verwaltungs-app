@@ -13,6 +13,7 @@
 
 
 const pool = require('../db');
+const WebSocketContext = require('../websocket/WebSocketContext');
 const {
   sendBookingEmailToCustomer,
   sendBookingEmailToTrainer,
@@ -95,15 +96,30 @@ exports.bookCourse = async (req, res) => {
     const course = courseResult.rows[0];
 
     // Anzahl aktueller Buchungen prüfen
-    const count = await pool.query('SELECT COUNT(*) FROM bookings WHERE course_id = $1', [courseId]);
-    if (parseInt(count.rows[0].count) >= course.max_capacity)
+    const count = await pool.query('SELECT COUNT(*) FROM bookings WHERE course_id = $1 AND status = $2', [courseId, 'booked']);
+    const currentBookings = parseInt(count.rows[0].count);
+
+    if (currentBookings >= course.max_capacity)
       return res.status(400).json({ message: 'Kurs ist ausgebucht' });
 
-     // Buchung anlegen
+    // Buchung anlegen
     await pool.query(
       'INSERT INTO bookings (course_id, user_id, status, booking_date) VALUES ($1, $2, $3, NOW())',
       [courseId, userId, 'booked']
     );
+
+    // Den neuen Status berechnen (für den Payload)
+    const newAvailableSeats = course.max_capacity - (currentBookings + 1);
+
+    // WebSocket-Trigger für die Push-Benachrichtigungen: Ruft die aktive Strategie auf
+    WebSocketContext.distributeMessage('course_updated', {
+        courseId: courseId, // Wichtig für das Frontend, um zu wissen, welcher Kurs betroffen ist
+        courseTitle: course.title,
+        maxCapacity: course.max_capacity,
+        // Sende die neue Anzahl der freien Plätze
+        seatsAvailable: newAvailableSeats, 
+        action: 'booked',
+    });
 
     // Kundendaten holen
     const userResult = await pool.query('SELECT email, name FROM users WHERE id = $1', [userId]);
@@ -170,6 +186,24 @@ exports.cancelBooking = async (req, res) => {
     const deleteResult = await pool.query('DELETE FROM bookings WHERE id = $1', [bookingId]);
     console.log(`Löschvorgang abgeschlossen: ${deleteResult.rowCount} Zeile(n) gelöscht`);
 
+    // Aktuelle Anzahl der Buchungen abrufen
+    const countResult = await pool.query('SELECT COUNT(*) FROM bookings WHERE course_id = $1 AND status = $2', [booking.course_id, 'booked']);
+    const remainingBookings = parseInt(countResult.rows[0].count);
+
+    // Kursdetails holen, um die max_capacity zu bekommen (da sie nicht in der Buchung ist)
+    const courseCapacity = await pool.query('SELECT max_capacity, title FROM courses WHERE id = $1', [booking.course_id]);
+
+    const newAvailableSeats = courseCapacity.rows[0].max_capacity - remainingBookings;
+
+    // WebSocket-Trigger für die Push-Benachrichtigungen: Ruft die aktive Strategie auf
+    WebSocketContext.distributeMessage('course_updated', {
+        courseId: booking.course_id,
+        courseTitle: courseCapacity.rows[0].title,
+        maxCapacity: courseCapacity.rows[0].max_capacity,
+        // Sende die neue Anzahl der freien Plätze
+        seatsAvailable: newAvailableSeats, 
+        action: 'cancelled',
+    });
 
     // Nutzerinfos holen
     const userResult = await pool.query('SELECT email, name FROM users WHERE id = $1', [userId]);
