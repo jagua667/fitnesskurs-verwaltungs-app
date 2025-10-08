@@ -1,7 +1,7 @@
 /**
  * Logout-Komponente
  * ------------------
- * Diese Komponente entfernt den Authentifizierungs-Token aus dem LocalStorage
+ * Diese Komponente entfernt den Authentifizierungs-Token aus dem SessionStorage
  * und leitet den Benutzer anschließend zur Login-Seite weiter.
  * 
  * API-Verhalten:
@@ -14,14 +14,14 @@
 /**
  * Komponente zum Ausloggen eines Benutzers.
  * Führt folgende Schritte aus:
- * 1. Entfernt das authToken aus dem LocalStorage.
+ * 1. Entfernt das authToken aus dem SessionStorage.
  * 2. Leitet den Benutzer zur Login-Seite weiter.
  */
 const Logout = () => {
   
   const handleLogout = () => {
     // Entferne den Authentifizierungs-Token
-    localStorage.removeItem("authToken");
+    sessionStorage.removeItem("authToken");
     
     // Leite Benutzer zur Login-Seite um
     window.location.href = "/login";

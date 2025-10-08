@@ -16,7 +16,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const TrainerDashboard = () => {
   const { user, token } = useAuth();
-  const tokenFromLocalStorage = localStorage.getItem('token');;
+  const tokenFromSessionStorage = sessionStorage.getItem('token');;
 
   // Lokaler Zustand für Kurse, Bewertungen, Formular, Kalender etc.
   const [courses, setCourses] = useState([]);
@@ -33,7 +33,7 @@ const TrainerDashboard = () => {
       try {
         const res = await fetch('http://localhost:5000/api/trainer/courses', {
           headers: {
-            Authorization: `Bearer ${tokenFromLocalStorage}`,
+            Authorization: `Bearer ${tokenFromSessionStorage}`,
           },
         });
         if (!res.ok) {
@@ -61,7 +61,7 @@ const TrainerDashboard = () => {
       try {
         const res = await fetch('http://localhost:5000/api/ratings/trainer', {
           headers: {
-            Authorization: `Bearer ${tokenFromLocalStorage}`,
+            Authorization: `Bearer ${tokenFromSessionStorage}`,
           },
         });
         if (!res.ok) {
@@ -100,7 +100,7 @@ const TrainerDashboard = () => {
       const res = await fetch(`http://localhost:5000/api/courses/${courseToDelete.id}`, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${tokenFromLocalStorage}`,
+          Authorization: `Bearer ${tokenFromSessionStorage}`,
         },
       });
 
@@ -130,7 +130,7 @@ const TrainerDashboard = () => {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenFromLocalStorage}`,
+            Authorization: `Bearer ${tokenFromSessionStorage}`,
           },
           body: JSON.stringify(course),
         });
@@ -140,7 +140,7 @@ const TrainerDashboard = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${tokenFromLocalStorage}`,
+            Authorization: `Bearer ${tokenFromSessionStorage}`,
           },
           body: JSON.stringify(course),
         });

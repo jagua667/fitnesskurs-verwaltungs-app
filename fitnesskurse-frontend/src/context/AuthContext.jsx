@@ -21,18 +21,18 @@
  * Funktionen:
  * - `login(email, password)`:
  *    → POST an `/auth/login`
- *    → Speichert JWT im LocalStorage
+ *    → Speichert JWT im SessionStorage
  *    → Setzt `user`-State bei Erfolg
  *    → Gibt `true` oder `false` zurück
  *    → Warnung bei 403 (z. B. gesperrter Account)
  *
  * - `logout()`:
  *    → POST an `/auth/logout` zur Server-Invalidierung
- *    → Entfernt Token aus LocalStorage
+ *    → Entfernt Token aus SessionStorage
  *    → Setzt `user` auf `null`
  *
  * - `useEffect` beim Mount:
- *    → Holt ggf. Token aus LocalStorage
+ *    → Holt ggf. Token aus SessionStorage
  *    → Fragt mit GET `/auth/me` Benutzerinfos ab
  *    → Entfernt abgelaufene Tokens und setzt `loading` auf `false`
  *
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
           return false;
         }
 
-        localStorage.setItem('token', res.data.token);  // Speichere JWT
+        sessionStorage.setItem('token', res.data.token);  // Speichere JWT
         setUser(res.data.user);                         // Setze Benutzerzustand
         return true;
 
@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }) => {
       } catch (err) {
         console.error("Fehler beim Logout:", err);
       } finally {
-        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
         setUser(null);
       }
     };
@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }) => {
   // Bei Seiten-Neuladen: Token prüfen & user holen
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       if (!token) {
         setLoading(false);
         return;
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }) => {
         setUser(res.data); // Benutzer aus dem Token holen
       } catch (err) {
         console.error('Token ungültig oder abgelaufen');
-        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
       } finally {
         setLoading(false);
       }

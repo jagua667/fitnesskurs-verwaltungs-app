@@ -63,7 +63,7 @@ const MyBookings = () => {
   // Funktion zum Absenden einer Bewertung
   const handleRatingSubmit = async (course, review) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
 
       console.log("Kurs-ID für Bewertung:", course);
 
@@ -102,7 +102,7 @@ const MyBookings = () => {
   // Funktion zum Laden der Buchungen vom Server
   const fetchBookings = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const response = await axios.get("http://localhost:5000/api/bookings/my", {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -196,7 +196,7 @@ const MyBookings = () => {
   // Bestätigt und löscht Buchung
   const confirmCancel = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
 
       await axios.delete(`http://localhost:5000/api/bookings/${bookingToCancel}`, {
         headers: {

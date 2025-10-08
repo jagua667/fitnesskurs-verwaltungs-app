@@ -19,7 +19,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const res = await fetch('http://localhost:5000/api/admin/stats', {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -43,7 +43,7 @@ export default function AdminDashboard() {
 */
   const downloadCSV = async (endpoint, filename) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       const response = await fetch(endpoint, {
         method: 'GET',
         headers: {

@@ -32,7 +32,7 @@ export default function UserManagement() {
       try {
         const res = await axios.get("http://localhost:5000/api/admin/users", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,  // Authentifizierung mit JWT
+            Authorization: `Bearer ${sessionStorage.getItem("token")}`,  // Authentifizierung mit JWT
           },
         });
         setUsers(res.data);  // Benutzer in State speichern
@@ -68,7 +68,7 @@ export default function UserManagement() {
       // Benutzer löschen
       if (actionType === "delete") {
         await axios.delete(`http://localhost:5000/api/admin/users/${userId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${sessionStorage.getItem("token")}` },
         });
 
         // Benutzerliste aktualisieren
@@ -86,7 +86,7 @@ export default function UserManagement() {
         await axios.put(
           `http://localhost:5000/api/admin/users/lock`,
           { userId, locked: newLockedStatus },
-          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+          { headers: { Authorization: `Bearer ${sessionStorage.getItem("token")}` } }
         );
 
         // Benutzerliste aktualisieren

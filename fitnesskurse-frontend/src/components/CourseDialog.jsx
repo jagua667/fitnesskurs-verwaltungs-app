@@ -98,7 +98,7 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
     const handleBooking = async () => {
       setIsBooking(true);
       try {
-        const token = localStorage.getItem("token"); // oder wie du den Token speicherst
+        const token = sessionStorage.getItem("token"); // oder wie du den Token speicherst
         if (!token) {
           alert("Bitte zuerst einloggen, um zu buchen.");
           return;
