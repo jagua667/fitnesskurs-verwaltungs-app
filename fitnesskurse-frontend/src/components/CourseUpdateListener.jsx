@@ -1,11 +1,14 @@
 import React, { useEffect } from 'react';
 import { useSocket } from '../context/SocketContext';
+import { useSnackbar } from '../context/SnackbarContext';
 
 // Das Topic, das in der PubSubStrategy.js definiert ist
 const COURSE_UPDATE_TOPIC = 'course_updates'; 
 
 const CourseUpdateListener = () => {
   const { socket, activeStrategy } = useSocket();
+
+  const { showSnackbar } = useSnackbar(); // Muss hier sein
 
   useEffect(() => {
     if (!socket) return;
@@ -24,7 +27,8 @@ const CourseUpdateListener = () => {
       // Beispiel für UI-Update-Logik:
       // Führe hier die Logik aus, um die UI zu aktualisieren,
       // z.B. Redux-Action dispatch oder Zustand im Context ändern.
-      alert(`Kurs-Update: ${data.courseTitle} hat jetzt ${data.seatsAvailable} freie Plätze.`);
+      console.log(">>> VERSUCHE SNACKBAR anzuzeigen:", data.courseTitle);
+      showSnackbar(`Kurs-Update: ${data.courseTitle} hat jetzt ${data.seatsAvailable} freie Plätze.`, "info");
     };
 
     socket.on('course_updated', updateListener);

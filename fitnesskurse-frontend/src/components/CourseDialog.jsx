@@ -33,6 +33,7 @@
  */
 
 import React, { useState } from "react";
+import { useSnackbar } from '../context/SnackbarContext';
 import {
   Dialog,
   DialogContent,
@@ -49,6 +50,8 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
   if (!course) return null;
+
+  const { showSnackbar } = useSnackbar();
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -100,7 +103,7 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
       try {
         const token = sessionStorage.getItem("token"); // oder wie du den Token speicherst
         if (!token) {
-          alert("Bitte zuerst einloggen, um zu buchen.");
+          showSnackbar("Bitte zuerst einloggen, um zu buchen.", "warning");
           return;
         }
 
@@ -119,10 +122,10 @@ const CourseDialog = ({ course, onClose, onSubmitRating, onShowReviews }) => {
           throw new Error(data.message || "Buchung fehlgeschlagen.");
         }
 
-        alert("🎉 Buchung erfolgreich!");
+        showSnackbar("🎉 Buchung erfolgreich!", "success");
         onClose(); // optional: Dialog schließen
       } catch (err) {
-        alert("❌ Fehler bei der Buchung: " + err.message);
+        showSnackbar("❌ Fehler bei der Buchung: " + err.message, "error");
       }
       setIsBooking(false);
     };

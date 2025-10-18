@@ -15,6 +15,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { SocketProvider } from './context/SocketContext';
+import { SnackbarProvider } from './context/SnackbarContext';
 import { AuthProvider } from "./context/AuthContext";
 import CourseUpdateListener from "./components/CourseUpdateListener";
 import Layout from "./components/Layout";
@@ -54,6 +55,7 @@ function App() {
     <SocketProvider>
         <ThemeProvider theme={theme}>
           <AuthProvider>
+           <SnackbarProvider>
             <CourseUpdateListener /> 
             <Routes>
               <Route path="*" element={<div>Seite nicht gefunden</div>} />
@@ -153,6 +155,7 @@ function App() {
                 }
               />
             </Routes>
+           </SnackbarProvider>
           </AuthProvider>
         </ThemeProvider>
     </SocketProvider>
