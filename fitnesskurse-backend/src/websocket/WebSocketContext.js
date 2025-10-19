@@ -19,7 +19,7 @@ class WebSocketContext {
         if (WebSocketContext.instance) {
             return WebSocketContext.instance;
         }
-        
+
         // Allgemeine Socket.IO-Instanz
         this.io = null;
         // Die aktuell aktive Strategie-Instanz (z.B. ObserverStrategy)
@@ -58,7 +58,7 @@ class WebSocketContext {
         // 3. Verbindungshandling definieren
         this.io.on('connection', (clientSocket) => {
             console.log(`[WS] Neuer Client verbunden. ID: ${clientSocket.id}`);
-            
+
             // Registriere den neuen Client bei der aktiven Strategie (Strategy-Muster-Aufruf)
             this.activeStrategy.registerClient(clientSocket);
 
@@ -72,6 +72,37 @@ class WebSocketContext {
     }
 
     /**
+     * Methode, die spezifisch für Kurs-Updates mit Zustandsinformationen aufgerufen wird.
+     * Diese Methode wird vom bookingController aufgerufen.
+     * Leitet die Benachrichtigung an die aktive Strategie weiter, die die rollenbasierte Filterung übernimmt.
+     * @param {object} filterData - Enthält { updatedCourse, oldSpots, newSpots }
+     */
+    notifyCourseUpdate(filterData) {
+        if (!this.activeStrategy) {
+            console.error('[WS ERROR] notifyCourseUpdate aufgerufen, bevor die Strategie initialisiert wurde.');
+            return;
+        }
+
+        // Leitet den Aufruf an die aktive Strategie weiter, die für die rollenbasierte Filterung zuständig ist.
+        // Die Strategie MUSS diese neue Methode implementieren.
+        if (typeof this.activeStrategy.notifyCourseUpdate === 'function') {
+            this.activeStrategy.notifyCourseUpdate(filterData);
+        } else {
+            // Führe das Mapping hier durch, falls die Strategie die neue Methode nicht implementiert.
+            console.warn('[WS WARN] Die aktive Strategie implementiert notifyCourseUpdate nicht. Nachrichten werden ungefiltert gesendet!');
+
+            // Mappe die Manager-Daten ({updatedCourse: {title, ...}, newSpots}) in das Client-Format ({courseTitle, seatsAvailable}).
+            const clientPayload = {
+                courseTitle: filterData.updatedCourse.title,
+                seatsAvailable: filterData.newSpots,
+                courseId: filterData.updatedCourse.id // Füge die ID hinzu, falls sie im Client benötigt wird
+            };
+
+            this.activeStrategy.distributeMessage('course_updated', clientPayload);
+        }
+    }
+
+    /**
      * Methode, die von der Geschäftslogik (z.B. CourseController) aufgerufen wird, 
      * um eine Nachricht zu verteilen.
      * @param {string} eventName - Der Name des Ereignisses (z.B. 'course_updated').
@@ -82,11 +113,11 @@ class WebSocketContext {
             console.error('[WS ERROR] distributeMessage aufgerufen, bevor die Strategie initialisiert wurde.');
             return;
         }
-        
+
         // Leitet den Aufruf an die aktuell aktive Strategie weiter
         this.activeStrategy.distributeMessage(eventName, payload);
     }
-    
+
     /**
      * Gibt die Singleton-Instanz zurück.
      */

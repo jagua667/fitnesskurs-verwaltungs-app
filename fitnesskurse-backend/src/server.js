@@ -52,11 +52,15 @@ console.log("Geladener DB-Benutzer: ", process.env.DB_USER);
 console.log("Geladenes DB-Passwort: ", process.env.DB_PASSWORD);
 console.log("🚀 Starte Verbindung zur Datenbank...");
 
+const CourseManager = require('../models/CourseManager'); // ⬅️ Neu: Import des Managers
+const courseManager = CourseManager;
+
 // Verbindung testen
 pool.connect()
   .then(client => {
     console.log("✅ Erfolgreich mit PostgreSQL verbunden");
     client.release(); // Verbindung sofort zurückgeben!
+    courseManager.loadInitialState();
   })
   .catch(err => console.error("❌ Fehler bei der DB-Verbindung:", err));
 
@@ -152,5 +156,5 @@ server.listen(PORT, () => {
   console.log(`Swagger-Dokumentation läuft unter http://localhost:${PORT}/api-docs`);
 });
 
-module.exports = { app, pool };
+module.exports = { app, pool, courseManager };
 

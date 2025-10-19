@@ -14,6 +14,7 @@
 
 const pool = require('../db');
 const WebSocketContext = require('../websocket/WebSocketContext');
+const courseManager = require('../../models/CourseManager.js');
 const {
   sendBookingEmailToCustomer,
   sendBookingEmailToTrainer,
@@ -80,11 +81,13 @@ SELECT b.id AS booking_id, b.booking_date, c.*, c.title AS course_name, t.name A
 exports.bookCourse = async (req, res) => {
   const userId = req.user.id;
   const { courseId } = req.body;
+  const client = await pool.connect();
 
   try {
+    await client.query('BEGIN'); // Transaktion starten
     // Kursdetails inkl. Trainerdaten abfragen
-    const courseResult = await pool.query(
-      `SELECT c.*, u.email AS trainer_email, u.name AS trainer_name 
+    const courseResult = await client.query(
+      `SELECT c.id, c.max_capacity, u.email AS trainer_email, u.name AS trainer_name, c.title, c.start_time, c.end_time
        FROM courses c 
        JOIN users u ON c.trainer_id = u.id 
        WHERE c.id = $1`,
@@ -95,41 +98,48 @@ exports.bookCourse = async (req, res) => {
 
     const course = courseResult.rows[0];
 
-    // Anzahl aktueller Buchungen prüfen
-    const count = await pool.query('SELECT COUNT(*) FROM bookings WHERE course_id = $1 AND status = $2', [courseId, 'booked']);
-    const currentBookings = parseInt(count.rows[0].count);
+    // ATOMARE KAPAZITÄTSPRÜFUNG & ZÄHLER-INKREMENT
+    const updateResult = await client.query(
+      `UPDATE courses 
+       SET booked_participants = booked_participants + 1 
+       WHERE id = $1 AND booked_participants < max_capacity
+       RETURNING booked_participants`,
+      [courseId]
+    );
 
-    if (currentBookings >= course.max_capacity)
+    if (updateResult.rowCount === 0) {
+      await client.query('ROLLBACK');
       return res.status(400).json({ message: 'Kurs ist ausgebucht' });
+    }
 
-    // Buchung anlegen
-    await pool.query(
+    // 3. Buchung anlegen
+    await client.query(
       'INSERT INTO bookings (course_id, user_id, status, booking_date) VALUES ($1, $2, $3, NOW())',
       [courseId, userId, 'booked']
     );
 
-    // Den neuen Status berechnen (für den Payload)
-    const newAvailableSeats = course.max_capacity - (currentBookings + 1);
-
-    // WebSocket-Trigger für die Push-Benachrichtigungen: Ruft die aktive Strategie auf
-    WebSocketContext.distributeMessage('course_updated', {
-        courseId: courseId, // Wichtig für das Frontend, um zu wissen, welcher Kurs betroffen ist
-        courseTitle: course.title,
-        maxCapacity: course.max_capacity,
-        // Sende die neue Anzahl der freien Plätze
-        seatsAvailable: newAvailableSeats, 
-        action: 'booked',
-    });
-
-    // Kundendaten holen
-    const userResult = await pool.query('SELECT email, name FROM users WHERE id = $1', [userId]);
+    // 4. KUNDENDATEN FÜR E-MAIL ABRUFEN (INNERHALB DER TRANSAKTION MIT 'client')
+    const userResult = await client.query('SELECT email, name FROM users WHERE id = $1', [userId]);
     const user = userResult.rows[0];
+
+    await client.query('COMMIT'); // Transaktion erfolgreich abschließen
+
+    // Zustand über den CourseManager aktualisieren und Filter-Daten abrufen
+    // participantsChange = +1 (Ein Platz wurde belegt, d.h. -1 free spot, oder +1 booked participant)
+    const filterData = await courseManager.handleCourseUpdate(courseId, -1);
+
+    if (filterData) {
+      // Rufe die zentrale Benachrichtigungsfunktion mit den Zustandsdaten auf
+      // Diese Funktion enthält jetzt die rollenbasierte Filterlogik.
+      WebSocketContext.notifyCourseUpdate(filterData);
+      // ⚠️ Die vorherige manuelle WebSocketContext.distributeMessage-Logik wird entfernt/ersetzt.
+    }
 
     // E-Mail-Daten vorbereiten
     const emailData = {
       name: user.name,
       user: user.name,
-      course: course.name,
+      course: course.title,
       date: course.date,
       time: course.time,
       trainer: course.trainer_name,
@@ -138,15 +148,21 @@ exports.bookCourse = async (req, res) => {
     // E-Mails senden
     await sendBookingEmailToCustomer(user.email, emailData);
     console.log("📧 Kunden-E-Mail:", user.email);
-    await sendBookingEmailToTrainer(course.trainer_email, emailData); 
+    await sendBookingEmailToTrainer(course.trainer_email, emailData);
 
     res.json({ message: 'Kurs gebucht und E-Mails gesendet' });
   } catch (err) {
+    // ROLLBACK bei jedem Fehler
+    await client.query('ROLLBACK');
     // Fehler bei doppelter Buchung (Unique Constraint)
     if (err.code === '23505') {
       return res.status(400).json({ message: 'Du hast diesen Kurs bereits gebucht' });
     }
-    res.status(500).json({ error: 'Fehler beim Buchen' });
+    console.error("Fehler beim Buchen:", err.message, err.stack);
+    res.status(500).json({ error: 'Fehler beim Buchen', details: err.message });
+  } finally {
+    // UNBEDINGT die Client-Verbindung freigeben
+    client.release();
   }
 };
 
@@ -159,12 +175,14 @@ exports.bookCourse = async (req, res) => {
 exports.cancelBooking = async (req, res) => {
   const userId = req.user.id;
   const { bookingId } = req.params;
+  const client = await pool.connect(); // Startet DB-Client für Transaktion
 
   try {
+    await client.query('BEGIN'); // Transaktion starten
     console.log(`Versuche, Buchung zu stornieren: bookingId = ${bookingId}, userId = ${userId}`);
 
     // Buchung mit Kurs- und Trainerdaten abfragen
-    const bookingResult = await pool.query(
+    const bookingResult = await client.query(
       `SELECT b.*, c.title AS course_name, c.start_time, c.end_time, 
               u.email AS trainer_email, u.name AS trainer_name
        FROM bookings b
@@ -182,39 +200,47 @@ exports.cancelBooking = async (req, res) => {
     const booking = bookingResult.rows[0];
     console.log(`Buchung gefunden: ${JSON.stringify(booking)}`);
 
-    // Buchung löschen
-    const deleteResult = await pool.query('DELETE FROM bookings WHERE id = $1', [bookingId]);
-    console.log(`Löschvorgang abgeschlossen: ${deleteResult.rowCount} Zeile(n) gelöscht`);
+    const courseId = booking.course_id;
 
-    // Aktuelle Anzahl der Buchungen abrufen
-    const countResult = await pool.query('SELECT COUNT(*) FROM bookings WHERE course_id = $1 AND status = $2', [booking.course_id, 'booked']);
-    const remainingBookings = parseInt(countResult.rows[0].count);
+    // 2. Buchung löschen (mit 'client')
+    await client.query('DELETE FROM bookings WHERE id = $1', [bookingId]);
 
-    // Kursdetails holen, um die max_capacity zu bekommen (da sie nicht in der Buchung ist)
-    const courseCapacity = await pool.query('SELECT max_capacity, title FROM courses WHERE id = $1', [booking.course_id]);
+    // 3. ATOMARE ZÄHLER-DEKREMENTIERUNG (mit 'client')
+    await client.query('UPDATE courses SET booked_participants = booked_participants - 1 WHERE id = $1', [courseId]);
 
-    const newAvailableSeats = courseCapacity.rows[0].max_capacity - remainingBookings;
+    // Zustand über den CourseManager aktualisieren und Filter-Daten abrufen
+    // participantsChange = +1 (Ein freier Platz kommt hinzu)
+    const filterResult = await courseManager.handleCourseUpdate(courseId, -1);
 
-    // WebSocket-Trigger für die Push-Benachrichtigungen: Ruft die aktive Strategie auf
-    WebSocketContext.distributeMessage('course_updated', {
-        courseId: booking.course_id,
-        courseTitle: courseCapacity.rows[0].title,
-        maxCapacity: courseCapacity.rows[0].max_capacity,
-        // Sende die neue Anzahl der freien Plätze
-        seatsAvailable: newAvailableSeats, 
-        action: 'cancelled',
-    });
+    if (filterResult) {
+      // 🎯 KORREKTUR: Mappen der Manager-Rückgabe auf Client-Format
+      const clientPayload = {
+        // Der Titel liegt im updatedCourse-Objekt
+        courseTitle: filterResult.updatedCourse.title,
+        // Die korrekte Anzahl freier Plätze liegt in newSpots
+        seatsAvailable: filterResult.newSpots,
+        courseId: courseId
+      };
 
-    // Nutzerinfos holen
-    const userResult = await pool.query('SELECT email, name FROM users WHERE id = $1', [userId]);
+      // 3. Rufe die zentrale Benachrichtigungsfunktion mit KORRIGIERTER Payload auf
+      WebSocketContext.distributeMessage('course_updated', clientPayload);
+      console.log(`[WS:INFO] Sende Update: ${clientPayload.courseTitle} hat ${clientPayload.seatsAvailable} Plätze.`);
+    }
+
+    // 4. 🔥 KUNDENDATEN FÜR E-MAIL ABRUFEN (mit 'client')
+    const userResult = await client.query('SELECT email, name FROM users WHERE id = $1', [userId]);
     const user = userResult.rows[0];
+
+    await client.query('COMMIT'); // Transaktion erfolgreich abschließen
 
     const emailData = {
       name: user.name,
       user: user.name,
       course: booking.course_name,
-      date: booking.start_time,
-      time: booking.end_time,
+      date: booking.start_time ? booking.start_time.toISOString().split("T")[0] : "unbekannt",
+      time: (booking.start_time && booking.end_time)
+        ? `${booking.start_time.toTimeString().slice(0, 5)} - ${booking.end_time.toTimeString().slice(0, 5)}`
+        : "unbekannt",
       trainer: booking.trainer_name,
     };
 
@@ -228,8 +254,11 @@ exports.cancelBooking = async (req, res) => {
 
     res.status(200).json({ message: 'Buchung storniert und E-Mails gesendet' });
   } catch (err) {
+    await client.query('ROLLBACK'); // Bei Fehler Transaktion rückgängig machen
     console.error("Fehler beim Stornieren:", err.message, err.stack);
     res.status(500).json({ error: 'Fehler beim Stornieren', details: err.message });
+  } finally {
+    client.release(); // Client-Verbindung freigeben
   }
 };
 
