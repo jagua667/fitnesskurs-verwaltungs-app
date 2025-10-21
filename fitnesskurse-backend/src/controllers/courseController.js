@@ -1,6 +1,10 @@
 const { Parser } = require('json2csv');
 const pool = require('../db'); // Verbindung zur Datenbank
 const { parseISO, addWeeks, isBefore } = require('date-fns');
+const { deleteCourseAndCollectAffectedUsers } = require('../services/courseDeletionService');
+const observerNotifier = require('../services/notifications/observerNotifier');
+const { createMediatorWithDefaults } = require('../services/notifications/mediatorNotifier');
+const { publishCourseDeleted } = require('../services/notifications/pubsubNotifier');
 
 /**
  * Alle Kurse abrufen und zusammen mit Bewertungen zurückgeben
@@ -191,5 +195,36 @@ exports.exportCourses = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Fehler beim Exportieren der Kurse.' });
+  }
+};
+
+// DELETE /api/courses/:id?pattern=observer|mediator|pubsub
+exports.deleteCourseHandler = async(req, res) => {
+  const courseId = parseInt(req.params.id, 10);
+  const pattern = (req.query.pattern || 'observer').toLowerCase();
+
+  try {
+    const result = await deleteCourseAndCollectAffectedUsers(courseId);
+    if (!result.deletedCourseId) {
+      return res.status(404).json({ ok: false, error: 'Course not found' });
+    }
+
+    if (result.affectedBookingsCount > 0) {
+      if (pattern === 'observer') {
+        await observerNotifier.notifyCourseDeletion(result.affectedUsers, courseId);
+      } else if (pattern === 'mediator') {
+        const mediator = createMediatorWithDefaults();
+        await mediator.notify(result.affectedUsers, { courseId, message: 'Der Kurs wurde abgesagt.' });
+      } else if (pattern === 'pubsub') {
+        publishCourseDeleted(result.affectedUsers, courseId);
+      } else {
+        await observerNotifier.notifyCourseDeletion(result.affectedUsers, courseId);
+      }
+    }
+
+    return res.json({ ok: true, deletedCourseId: result.deletedCourseId, affectedBookings: result.affectedBookingsCount });
+  } catch (err) {
+    console.error('deleteCourse error', err);
+    return res.status(500).json({ ok: false, error: 'Server error', details: err.message });
   }
 };
