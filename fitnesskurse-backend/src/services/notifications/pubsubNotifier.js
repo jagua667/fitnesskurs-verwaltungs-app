@@ -1,3 +1,4 @@
+// src/services/notifications/pubsubNotifier.js
 const EventEmitter = require('events');
 const WebSocketContext = require('../../websocket/WebSocketContext');
 const mailer = require('../mailer');
@@ -5,6 +6,7 @@ const PerfMonitor = require('../../utils/perfMonitor');
 
 const bus = new EventEmitter();
 
+// 🧩 Kurs gelöscht: WebSocket + Mail
 bus.on('courseDeleted', async (payload) => {
   return PerfMonitor.measureAsync('PubSub.notifyCourseDeletion', async () => {
     const { affectedUsers, courseId } = payload;
@@ -29,8 +31,60 @@ bus.on('courseDeleted', async (payload) => {
   }));
 });
 
-function publishCourseDeleted(affectedUsers, courseId) {
-  bus.emit('courseDeleted', { affectedUsers, courseId });
+// 🧩 Kurs wieder verfügbar: WebSocket + Mail
+bus.on('courseAvailableAgain', async (payload) => {
+  return PerfMonitor.measureAsync('PubSub.notifyCourseAvailableAgain', async () => {
+    const { interestedUsers, course } = payload;
+    const io = WebSocketContext.getIO ? WebSocketContext.getIO() : (WebSocketContext.io || null);
+    if (!io) return;
+    const notification = {
+      type: 'course:available',
+      courseId: course.id,
+      message: `Kurs-Update: ${course.title} hat jetzt ${course.seatsAvailable} freie Plätze.`,
+      timestamp: new Date().toISOString()
+    };
+    interestedUsers.forEach(u => {
+      try { io.to(`user_${u.user_id}`).emit('notification', notification); } catch (e) { console.error(e); }
+    });
+  });
+});
+
+bus.on('courseAvailableAgain', async (payload) => {
+  const { interestedUsers, course } = payload;
+  await Promise.all(interestedUsers.map(async (u) => {
+    if (!u.email) return;
+    try {
+      await mailer.sendMail(
+        u.email,
+        `Kurs wieder verfügbar: ${course.title}`,
+        `Im Kurs "${course.title}" ist wieder ein Platz frei (${course.seatsAvailable} verfügbar).`
+      );
+    } catch (e) {
+      console.error('[pubsubNotifier] mail error', e);
+    }
+  }));
+});
+
+// 🧩 Änderung hier: emit wird "awaited" – alle Listener werden ausgeführt ✅
+async function publishCourseDeleted(affectedUsers, courseId) {
+  await Promise.all(
+    bus.listeners('courseDeleted').map(fn =>
+      fn({ affectedUsers, courseId })
+    )
+  );
 }
 
-module.exports = { publishCourseDeleted, bus };
+// 🧩 Änderung hier: emit wird "awaited" – alle Listener werden ausgeführt ✅
+async function publishCourseAvailableAgain(interestedUsers, course) {
+  await Promise.all(
+    bus.listeners('courseAvailableAgain').map(fn =>
+      fn({ interestedUsers, course })
+    )
+  );
+}
+
+module.exports = {
+  publishCourseDeleted,
+  publishCourseAvailableAgain,
+  bus
+};

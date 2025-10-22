@@ -38,4 +38,36 @@ async function notifyCourseDeletion(affectedUsers, courseId) {
   });
 }
 
-module.exports = { notifyCourseDeletion };
+/**
+ * Neue Funktion: Wird aufgerufen, wenn ein Platz im Kurs wieder frei wird
+ * @param {Array} interestedUsers - Benutzer ohne Buchung
+ * @param {Object} courseData - { id, title, seatsAvailable }
+ */
+async function notifyCourseAvailableAgain(interestedUsers, courseData) {
+  return PerfMonitor.measureAsync('Observer.notifyCourseAvailableAgain', async () => {
+    const io = WebSocketContext.getIO ? WebSocketContext.getIO() : (WebSocketContext.io || null);
+    const { id: courseId, title, seatsAvailable } = courseData;
+
+    const notification = {
+      type: 'course:available',
+      courseId,
+      message: `Kurs-Update: ${title} hat jetzt ${seatsAvailable} freie Plätze.`,
+      timestamp: new Date().toISOString()
+    };
+
+    if (io) {
+      interestedUsers.forEach(u => {
+        try {
+          io.to(`user_${u.user_id}`).emit('notification', notification);
+        } catch (e) {
+          console.error('[observerNotifier] WS emit failed for user', u.user_id, e);
+        }
+      });
+    } else {
+      console.warn('[observerNotifier] io not available, skipping websocket emits.');
+    }
+  });
+}
+
+
+module.exports = { notifyCourseDeletion, notifyCourseAvailableAgain };
