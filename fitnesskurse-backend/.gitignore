@@ -10,3 +10,5 @@ jest-stare/
 .DS_Store
 .idea/
 .vscode/
+
+perf_logs/

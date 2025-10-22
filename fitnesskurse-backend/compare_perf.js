@@ -78,6 +78,24 @@ mailer.sendMail = async () => {}; // Dummy-Mailer
     'Max (ms)': r.max.toFixed(2)
   })));
 
+// --- Schreibe Markdown-Ergebnisdatei ----------------------
+const fs = require('fs');
+const mdLines = [
+  '# 📊 Performance-Vergleich der Notification-Patterns',
+  '',
+  '| Pattern | Avg (ms) | Min (ms) | Max (ms) |',
+  '|----------|----------|----------|----------|',
+  ...results.map(r => 
+    `| ${r.label} | ${r.avg.toFixed(2)} | ${r.min.toFixed(2)} | ${r.max.toFixed(2)} |`
+  ),
+  '',
+  `> Testlauf: ${new Date().toISOString()} – 50 Durchläufe, 100 User.`
+];
+
+const outputPath = './perf_logs/perf_results.md';
+fs.writeFileSync(`${outputPath}`, mdLines.join('\n'), 'utf8');
+console.log(`📝 Ergebnisse gespeichert unter: ${outputPath}`);
+
   console.log('\n✅ Test abgeschlossen. Werte werden im PerfMonitor-Log zusätzlich aufgezeichnet.\n');
 })();
 
