@@ -21,6 +21,9 @@ const {
   sendCancellationEmailToCustomer,
   sendCancellationEmailToTrainer,
 } = require('../services/mailer');
+const { observerNotifier } = require('../services/notifications/observerNotifier');
+const { createMediatorWithDefaults } = require('../services/notifications/mediatorNotifier');
+const { publishCourseAvailableAgain } = require('../services/notifications/pubsubNotifier');
 
 /**
  * Alle Buchungen des angemeldeten Nutzers abrufen
@@ -212,8 +215,18 @@ exports.cancelBooking = async (req, res) => {
     // participantsChange = +1 (Ein freier Platz kommt hinzu)
     const filterResult = await courseManager.handleCourseUpdate(courseId, -1);
 
+    // 🔍 Ermittle interessierte Benutzer (z. B. Kunden, die sich vormals nicht einbuchen konnten)
+    const interestedUsers = await courseManager.getInterestedUsers(courseId);
+
+    // 🎯 Bereite Kursdaten für Notification-Patterns vor
+    const courseData = {
+      id: courseId,
+      title: filterResult.updatedCourse.title,
+      seatsAvailable: filterResult.newSpots,
+    };
+
     if (filterResult) {
-      // 🎯 KORREKTUR: Mappen der Manager-Rückgabe auf Client-Format
+      // Mappen der Manager-Rückgabe auf Client-Format
       const clientPayload = {
         // Der Titel liegt im updatedCourse-Objekt
         courseTitle: filterResult.updatedCourse.title,
@@ -222,8 +235,21 @@ exports.cancelBooking = async (req, res) => {
         courseId: courseId
       };
 
-      // 3. Rufe die zentrale Benachrichtigungsfunktion mit KORRIGIERTER Payload auf
+      // 3a. Rufe die zentrale Benachrichtigungsfunktion mit KORRIGIERTER Payload auf
       WebSocketContext.distributeMessage('course_updated', clientPayload);
+
+      // 3b. Rufe notifyCourseAvailableAgain für das relevante Pattern auf.
+      const pattern = (req.query.pattern || process.env.NOTIFY_PATTERN || 'observer').toLowerCase();
+      console.log(`[Pattern] Using pattern="${pattern}" for cancelBooking notification`);
+      if (pattern === 'observer') {
+        await observerNotifier.notifyCourseAvailableAgain(interestedUsers, courseData);
+      } else if (pattern === 'mediator') {
+        const mediator = createMediatorWithDefaults();
+        await mediator.notifyCourseAvailableAgain(interestedUsers, courseData);
+      } else if (pattern === 'pubsub') {
+        publishCourseAvailableAgain(interestedUsers, courseData);
+      }
+
       console.log(`[WS:INFO] Sende Update: ${clientPayload.courseTitle} hat ${clientPayload.seatsAvailable} Plätze.`);
     }
 

@@ -60,6 +60,10 @@ class WebSocketContext {
             console.log(`[WS] Neuer Client verbunden. ID: ${clientSocket.id}`);
 
             // Registriere den neuen Client bei der aktiven Strategie (Strategy-Muster-Aufruf)
+            // wenn Client userId via handshake.auth übergibt (z.B. client.connect({ auth: { userId } }))
+            if (clientSocket.handshake && clientSocket.handshake.auth && clientSocket.handshake.auth.userId) {
+                clientSocket.userId = clientSocket.handshake.auth.userId;
+            }
             this.activeStrategy.registerClient(clientSocket);
 
             // Optional: Client-Disconnect-Handling
@@ -134,6 +138,27 @@ class WebSocketContext {
     getActiveStrategy() {
         return this.activeStrategy;
     }
+
+    /**
+     * Gibt alle aktiven Benutzer-IDs zurück (z. B. für Benachrichtigungen über verfügbare Kurse)
+     */
+    getActiveUserIds() {
+        if (!this.io) {
+            console.warn('[WS WARN] getActiveUserIds aufgerufen, aber io ist nicht initialisiert.');
+            return [];
+        }
+
+        // Zugriff auf alle verbundenen Sockets
+        const connectedSockets = Array.from(this.io.sockets.sockets.values());
+
+        // Falls du bei der Verbindung die userId mitgibst (z. B. clientSocket.userId)
+        const userIds = connectedSockets
+            .map(socket => socket.userId)
+            .filter(Boolean); // Nur echte IDs
+
+        return userIds;
+    }
+
 }
 
 // Exportiere die Singleton-Instanz

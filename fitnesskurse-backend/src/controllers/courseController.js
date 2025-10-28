@@ -154,23 +154,6 @@ exports.updateCourse = async (req, res) => {
 };
 
 /**
- * Einen Kurs löschen
- * - Löscht den Kurs basierend auf der Kurs-ID (URL-Parameter)
- * - Gibt eine Bestätigung bei Erfolg zurück
- * - 404 wenn Kurs nicht gefunden
- */
-exports.deleteCourse = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query('DELETE FROM courses WHERE id = $1 RETURNING *', [id]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Kurs nicht gefunden' });
-    res.json({ message: 'Kurs gelöscht' });
-  } catch (err) {
-    res.status(500).json({ error: 'Fehler beim Löschen des Kurses' });
-  }
-};
-
-/**
  * Kurse als CSV exportieren
  * - Exportiert alle Kurse aus der Datenbank
  * - Sendet CSV-Datei als Download an den Client
@@ -198,7 +181,30 @@ exports.exportCourses = async (req, res) => {
   }
 };
 
+/**
+ * Einen Kurs löschen (veraltet, wurde durch deleteCourseHandler ersetzt)
+ * - Löscht den Kurs basierend auf der Kurs-ID (URL-Parameter)
+ * - Gibt eine Bestätigung bei Erfolg zurück
+ * - 404 wenn Kurs nicht gefunden
+ */
+exports.deleteCourse = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM courses WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Kurs nicht gefunden' });
+    res.json({ message: 'Kurs gelöscht' });
+  } catch (err) {
+    res.status(500).json({ error: 'Fehler beim Löschen des Kurses' });
+  }
+};
+
 // DELETE /api/courses/:id?pattern=observer|mediator|pubsub
+/**
+ * Einen Kurs löschen
+ * - Löscht den Kurs basierend auf der Kurs-ID (URL-Parameter)
+ * - Gibt eine Bestätigung bei Erfolg zurück
+ * - 404 wenn Kurs nicht gefunden
+ */
 exports.deleteCourseHandler = async(req, res) => {
   const courseId = parseInt(req.params.id, 10);
   const pattern = (req.query.pattern || 'observer').toLowerCase();

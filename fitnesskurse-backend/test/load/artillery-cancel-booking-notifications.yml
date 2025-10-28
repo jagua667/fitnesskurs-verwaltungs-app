@@ -1,0 +1,89 @@
+# test/load/artillery-cancel-booking-notifications.yml
+config:
+  target: "http://localhost:5000/api"
+  phases:
+    - duration: 30
+      arrivalRate: 50
+      name: "Observer – 50 Clients"
+      scenario: "Observer Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 200
+      name: "Observer – 200 Clients"
+      scenario: "Observer Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 500
+      name: "Observer – 500 Clients"
+      scenario: "Observer Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 1000
+      name: "Observer – 1000 Clients"
+      scenario: "Observer Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 2000
+      name: "Observer – 2000 Clients"
+      scenario: "Observer Pattern cancelBooking"
+
+    - duration: 30
+      arrivalRate: 50
+      name: "Mediator – 50 Clients"
+      scenario: "Mediator Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 200
+      name: "Mediator – 200 Clients"
+      scenario: "Mediator Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 500
+      name: "Mediator – 500 Clients"
+      scenario: "Mediator Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 1000
+      name: "Mediator – 1000 Clients"
+      scenario: "Mediator Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 2000
+      name: "Mediator – 2000 Clients"
+      scenario: "Mediator Pattern cancelBooking"
+
+    - duration: 30
+      arrivalRate: 50
+      name: "PubSub – 50 Clients"
+      scenario: "PubSub Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 200
+      name: "PubSub – 200 Clients"
+      scenario: "PubSub Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 500
+      name: "PubSub – 500 Clients"
+      scenario: "PubSub Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 1000
+      name: "PubSub – 1000 Clients"
+      scenario: "PubSub Pattern cancelBooking"
+    - duration: 30
+      arrivalRate: 2000
+      name: "PubSub – 2000 Clients"
+      scenario: "PubSub Pattern cancelBooking"
+
+  payload:
+    path: "bookings.csv"
+    fields: ["bookingId"]
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Observer Pattern cancelBooking"
+    flow:
+      - delete:
+          url: "/bookings/{{ bookingId }}?pattern=observer"
+
+  - name: "Mediator Pattern cancelBooking"
+    flow:
+      - delete:
+          url: "/bookings/{{ bookingId }}?pattern=mediator"
+
+  - name: "PubSub Pattern cancelBooking"
+    flow:
+      - delete:
+          url: "/bookings/{{ bookingId }}?pattern=pubsub"

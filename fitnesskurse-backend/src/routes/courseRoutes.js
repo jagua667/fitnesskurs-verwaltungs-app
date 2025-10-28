@@ -130,7 +130,7 @@ router.put('/:id', authenticateToken, authorizeRole(['admin', 'trainer']), cours
  * @swagger
  * /courses/{id}:
  *   delete:
- *     summary: Kurs löschen
+ *     summary: Kurs löschen mit Auswahl des Notification-Patterns (observer|mediator|pubsub)
  *     tags:
  *       - Kurse
  *     security:
@@ -142,17 +142,24 @@ router.put('/:id', authenticateToken, authorizeRole(['admin', 'trainer']), cours
  *         schema:
  *           type: integer
  *         description: Kurs-ID
+ *       - in: query
+ *         name: pattern
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [observer, mediator, pubsub]
+ *         description: Das zu verwendende Benachrichtigungs-Pattern
  *     responses:
  *       200:
- *         description: Kurs erfolgreich gelöscht
- *       401:
- *         description: Nicht autorisiert
- *       403:
- *         description: Zugriff verweigert
+ *         description: Kurs erfolgreich gelöscht und Benachrichtigungen versendet
  *       404:
  *         description: Kurs nicht gefunden
  */
-router.delete('/:id', authenticateToken, authorizeRole(['admin', 'trainer']), courseController.deleteCourse);
+router.delete('/:id', authenticateToken, authorizeRole(['admin', 'trainer']), courseController.deleteCourseHandler);
+
+// war: router.delete('/:id', authenticateToken, authorizeRole(['admin', 'trainer']), courseController.deleteCourse); 
+// TODO: /:id/pattern durch /:id ersetzen bei DELETE /courses/{id}
+
 
 module.exports = router;
 

@@ -1,6 +1,9 @@
 // ./models/CourseManager.js
 
-const pool = require('../src/db'); // Zugriff auf die PostgreSQL-Verbindung
+const pool = require('../db'); // Zugriff auf die PostgreSQL-Verbindung
+// WebSocketContext einbinden, um aktive User zu ermitteln
+const WebSocketContext = require('../websocket/WebSocketContext');
+
 class CourseManager {
     constructor() {
         this.courseData = new Map(); // In-Memory-Cache (Der State)
@@ -64,6 +67,28 @@ class CourseManager {
             newSpots: newSpots
         };
     }
+
+  async getInterestedUsers(courseId) {
+    // 1) userIds, die bereits gebucht sind
+    const bookedRows = await pool.query('SELECT user_id FROM bookings WHERE course_id = $1', [courseId]);
+    const bookedUserIds = bookedRows.rows.map(r => r.user_id);
+
+    // 2) aktive UserIDs aus WebSocketContext
+    const activeUserIds = WebSocketContext.getActiveUserIds ? WebSocketContext.getActiveUserIds() : [];
+
+    // 3) Filtere aktive User, die nicht gebucht sind
+    const interestedUserIds = activeUserIds.filter(uid => !bookedUserIds.includes(uid));
+    if (interestedUserIds.length === 0) return [];
+
+    // 4) Hole Emails/Name aus der Datenbank
+    const rows = await pool.query(
+      `SELECT id, email FROM users WHERE id = ANY($1::int[])`,
+      [interestedUserIds]
+    );
+
+    // Mappe in erwartetes Format { user_id, email }
+    return rows.rows.map(r => ({ user_id: r.id, email: r.email }));
+  }
 }
 
 // Singleton-Instanz exportieren

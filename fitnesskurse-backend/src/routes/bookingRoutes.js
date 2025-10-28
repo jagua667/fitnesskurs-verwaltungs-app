@@ -101,7 +101,6 @@ router.post('/', authenticateToken, authorizeRole(['kunde']), bookingController.
  */
 router.delete('/:bookingId', authenticateToken, authorizeRole(['kunde']), bookingController.cancelBooking);
 
-
 module.exports = router;
 
 
