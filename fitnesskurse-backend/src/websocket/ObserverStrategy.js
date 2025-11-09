@@ -10,7 +10,7 @@ class ObserverStrategy extends DistributionStrategy {
     constructor(io) {
         super(io);
         // Die zentrale Liste der Observer (Clients)
-        this.observers = new Set(); 
+        this.observers = new Set();
         console.log('[WS:OBSERVER] Observer Strategy geladen.');
     }
 
@@ -21,23 +21,24 @@ class ObserverStrategy extends DistributionStrategy {
      */
     registerClient(clientSocket) {
         this.observers.add(clientSocket);
-        
+
         // Wichtig für das Aufräumen: Wenn der Client die Verbindung trennt, muss er
         // aus der Liste entfernt werden (Unregister-Logik des Observer Patterns).
         clientSocket.on('disconnect', () => {
             this.observers.delete(clientSocket);
             // console.log(`[WS:OBSERVER] Client ${clientSocket.id} wurde entfernt. Aktive: ${this.observers.size}`);
         });
-        
+
         // Optional: Sende eine Bestätigung an den Client
         clientSocket.emit('status', { message: 'Als Observer registriert.' });
     }
 
     /**
-     * Verteilt die Nachricht, indem alle registrierten Observer direkt iteriert werden.
-     * @param {string} eventName - Der Name des Ereignisses.
-     * @param {object} payload - Die zu sendenden Daten.
-     */
+ * Verteilt die Nachricht, indem alle registrierten Observer direkt iteriert werden.
+ * @param {string} eventName - Der Name des Ereignisses.
+ * @param {object} payload - Die zu sendenden Daten.
+ */
+    // REVIEW:DISPATCH – Event an alle registrierten Observer senden (direktes emit)I
     distributeMessage(eventName, payload) {
         const messageCount = this.observers.size;
         // console.log(`[WS:OBSERVER] Verteile Event '${eventName}' an ${messageCount} Clients.`);
@@ -45,7 +46,7 @@ class ObserverStrategy extends DistributionStrategy {
         // Der Kern der Observer-Logik: Direkte Iteration und Benachrichtigung
         this.observers.forEach(clientSocket => {
             // Socket.IO sendet Events mit dem EventName und dem Payload
-            clientSocket.emit(eventName, payload); 
+            clientSocket.emit(eventName, payload);
         });
     }
 }

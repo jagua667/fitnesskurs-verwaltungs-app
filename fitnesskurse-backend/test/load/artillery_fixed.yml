@@ -1,0 +1,134 @@
+config:
+  target: "http://localhost:5000/api"
+  http:
+    pool: 200
+    timeout: 90
+    discardResponseBodies: true
+
+  # wird je Lauf mit --overrides überschrieben
+  variables:
+    pattern: observer
+
+  # Environments = je Szenario ein Lastprofil
+  environments:
+    smoke:
+      phases:
+        - { name: warmup, duration: 10, arrivalRate: 3 }
+        - { name: steady, duration: 40, arrivalRate: 5 }
+      scenarios:
+        - name: Feature-Flow
+          weight: 1
+
+    feature:
+      phases:
+        - { name: warmup, duration: 30, arrivalRate: 5 }
+        - { name: steady, duration: 120, arrivalRate: 20 }
+      scenarios:
+        - name: Feature-Flow
+          weight: 1
+
+    fehlerfall:
+      phases:
+        - { name: warmup, duration: 20, arrivalRate: 3 }
+        - { name: steady, duration: 90, arrivalRate: 8 }
+      scenarios:
+        - name: Fehlerfall
+          weight: 1
+
+    peak:
+      phases:
+        - { name: ramp, duration: 60, arrivalRate: 6, rampTo: 10 }
+        - { name: peak, duration: 1140, arrivalRate: 10 }
+      scenarios:
+        - name: Peak
+          weight: 1
+
+# ===== Szenarien =====
+scenarios:
+  - name: Feature-Flow
+    weight: 1
+    flow:
+      - get:
+          url: /feature
+          expect: [ { statusCode: 200 } ]
+      - think: 1
+      - post:
+          name: book            # << Processor prüft darauf
+          url: /book
+          json:
+            bookingId: '{{ bookingId }}'
+            courseId:  '{{ courseId }}'
+            userId:    '{{ userId }}'
+          expect: [ { statusCode: 201 } ]
+      - think: 1
+      - get:
+          url: /feature
+          expect: [ { statusCode: 200 } ]
+      - think: 1
+      # DELETE nur wenn POST wirklich 201 war
+      - delete:
+          name: delete-booking
+          url: "/bookings/{{ bookingId }}?pattern={{ pattern }}"
+      - think: 1
+
+  - name:  Fehlerfall
+    weight: 0
+    flow:
+      - get:
+          url: /course/invalid
+          expect: [ { statusCode: 400 } ]
+      - think: 1
+      - post:
+          url: /book
+          json:
+            bookingId: ""                # bewusst invalid → 400
+            courseId: "INVALID_ID"
+            userId: 9999
+          expect: [ { statusCode: 400 } ]
+      - think: 1
+      # Kurs löschen (nur wenn courseId aus Payload gültig ist)
+      - delete:
+          name: delete-course
+          url: "/courses/{{ courseId }}?pattern={{ pattern }}"
+          headers: { pattern: "{{ pattern }}" }
+      - think: 1
+
+  - name: Peak
+    weight: 0
+    flow:
+      - loop:
+          - get:
+              url: /feature
+              expect: [ { statusCode: 200 } ]
+          - think: 0.25
+          - post:
+              name: book
+              url: /book
+              json:
+                bookingId: '{{ bookingId }}'
+                courseId:  '{{ courseId }}'
+                userId:    '{{ userId }}'
+              expect: [ { statusCode: 201 } ]
+          - think: 0.25
+          - delete:
+              name: delete-booking
+              url: "/bookings/{{ bookingId }}?pattern={{ pattern }}"
+              headers: { pattern: "{{ pattern }}" }
+          - think: 0.25
+        count: 20
+
+# ===== Payload & Plugins =====
+payload:
+  - path: ./courses.csv
+    fields: [courseId]
+    order: random
+    skipHeader: true
+  - path: ./bookings.csv
+    fields: [bookingId, courseId, userId]
+    order: random
+    skipHeader: true
+
+plugins:
+  expect: {}
+
+processor: ./stub-load-processor.js

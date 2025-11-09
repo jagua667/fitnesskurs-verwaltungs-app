@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - services/notifications/pubsubNotifier.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>services/notifications/pubsubNotifier.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">73.59</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">90</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">24.94</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">0.81</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">// src/services/notifications/pubsubNotifier.js
+const EventEmitter = require(&#039;events&#039;);
+const WebSocketContext = require(&#039;../../websocket/WebSocketContext&#039;);
+const mailer = require(&#039;../mailer&#039;);
+const PerfMonitor = require(&#039;../../utils/perfMonitor&#039;);
+
+const bus = new EventEmitter();
+
+// 🧩 Kurs gelöscht: WebSocket + Mail
+bus.on(&#039;courseDeleted&#039;, async (payload) =&gt; {
+  return PerfMonitor.measureAsync(&#039;PubSub.notifyCourseDeletion&#039;, async () =&gt; {
+    const { affectedUsers, courseId } = payload;
+    const io = WebSocketContext.getIO ? WebSocketContext.getIO() : (WebSocketContext.io || null);
+    if (!io) return;
+    const notification = { type: &#039;course:deleted&#039;, courseId, message: &#039;Kurs abgesagt&#039; };
+    affectedUsers.forEach(u =&gt; {
+      try { io.to(`user_${u.user_id}`).emit(&#039;notification&#039;, notification); } catch (e) { console.error(e); }
+    });
+  });
+});
+
+bus.on(&#039;courseDeleted&#039;, async (payload) =&gt; {
+  const { affectedUsers, courseId } = payload;
+  await Promise.all(affectedUsers.map(async (u) =&gt; {
+    if (!u.email) return;
+    try {
+      await mailer.sendMail(u.email, `Kurs abgesagt (ID: ${courseId})`, &#039;Der Kurs wurde abgesagt. Deine Buchung wurde entfernt.&#039;);
+    } catch (e) {
+      console.error(&#039;[pubsubNotifier] mail error&#039;, e);
+    }
+  }));
+});
+
+// 🧩 Kurs wieder verfügbar: WebSocket + Mail
+bus.on(&#039;courseAvailableAgain&#039;, async (payload) =&gt; {
+  return PerfMonitor.measureAsync(&#039;PubSub.notifyCourseAvailableAgain&#039;, async () =&gt; {
+    const { interestedUsers, course } = payload;
+    const io = WebSocketContext.getIO ? WebSocketContext.getIO() : (WebSocketContext.io || null);
+    if (!io) return;
+    const notification = {
+      type: &#039;course:available&#039;,
+      courseId: course.id,
+      message: `Kurs-Update: ${course.title} hat jetzt ${course.seatsAvailable} freie Plätze.`,
+      timestamp: new Date().toISOString()
+    };
+    interestedUsers.forEach(u =&gt; {
+      try { io.to(`user_${u.user_id}`).emit(&#039;notification&#039;, notification); } catch (e) { console.error(e); }
+    });
+  });
+});
+
+bus.on(&#039;courseAvailableAgain&#039;, async (payload) =&gt; {
+  const { interestedUsers, course } = payload;
+  await Promise.all(interestedUsers.map(async (u) =&gt; {
+    if (!u.email) return;
+    try {
+      await mailer.sendMail(
+        u.email,
+        `Kurs wieder verfügbar: ${course.title}`,
+        `Im Kurs &quot;${course.title}&quot; ist wieder ein Platz frei (${course.seatsAvailable} verfügbar).`
+      );
+    } catch (e) {
+      console.error(&#039;[pubsubNotifier] mail error&#039;, e);
+    }
+  }));
+});
+
+// 🧩 Änderung hier: emit wird &quot;awaited&quot; – alle Listener werden ausgeführt ✅
+async function publishCourseDeleted(affectedUsers, courseId) {
+  await Promise.all(
+    bus.listeners(&#039;courseDeleted&#039;).map(fn =&gt;
+      fn({ affectedUsers, courseId })
+    )
+  );
+}
+
+// 🧩 Änderung hier: emit wird &quot;awaited&quot; – alle Listener werden ausgeführt ✅
+async function publishCourseAvailableAgain(interestedUsers, course) {
+  await Promise.all(
+    bus.listeners(&#039;courseAvailableAgain&#039;).map(fn =&gt;
+      fn({ interestedUsers, course })
+    )
+  );
+}
+
+module.exports = {
+  publishCourseDeleted,
+  publishCourseAvailableAgain,
+  bus
+};</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

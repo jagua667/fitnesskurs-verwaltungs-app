@@ -25,21 +25,22 @@ class PubSubStrategy extends DistributionStrategy {
         clientSocket.on('subscribe', (topic) => {
             if (topic === COURSE_UPDATE_TOPIC) {
                 // Der Kern der Pub/Sub Logik: Füge den Client zum Socket.IO Room hinzu.
-                clientSocket.join(COURSE_UPDATE_TOPIC); 
+                clientSocket.join(COURSE_UPDATE_TOPIC);
                 // console.log(`[WS:PUBSUB] Client ${clientSocket.id} abonniert Topic ${topic}.`);
                 clientSocket.emit('status', { message: `Topic ${topic} abonniert.` });
             }
         });
-        
+
         // Sende nur eine Basis-Statusmeldung (er muss noch abonnieren!)
         clientSocket.emit('status', { message: 'Verbindung hergestellt. Bitte Topic abonnieren.' });
     }
 
     /**
-     * Die Nachricht wird direkt an den Topic gesendet, ohne Wissen, wer abonniert hat.
-     * @param {string} eventName - Der Name des Ereignisses.
-     * @param {object} payload - Die zu sendenden Daten.
-     */
+ * Die Nachricht wird direkt an den Topic gesendet, ohne Wissen, wer abonniert hat.
+ * @param {string} eventName - Der Name des Ereignisses.
+ * @param {object} payload - Die zu sendenden Daten.
+ */
+    // REVIEW:DISPATCH – Publish auf Topic (Room) → alle Subscriber erhalten Event
     distributeMessage(eventName, payload) {
         // WICHTIG: Socket.IO's 'to()' oder 'in()' Methode wird verwendet, um an einen Room zu senden.
         // Dies ist die entkoppelte Pub/Sub-Verteilung.

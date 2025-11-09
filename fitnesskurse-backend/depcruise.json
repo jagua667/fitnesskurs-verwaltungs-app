@@ -1,0 +1,336 @@
+{
+  "modules": [
+    {
+      "source": "src/services/notifications/mediatorNotifier.js",
+      "dependencies": [
+        {
+          "module": "../../websocket/WebSocketContext",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/WebSocketContext.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "dependents": [],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/websocket/WebSocketContext.js",
+      "dependencies": [
+        {
+          "module": "./strategies.config",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/strategies.config.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "dependents": [
+        "src/services/notifications/mediatorNotifier.js",
+        "src/services/notifications/observerNotifier.js",
+        "src/services/notifications/pubsubNotifier.js"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/websocket/strategies.config.js",
+      "dependencies": [
+        {
+          "module": "./InterestFilterStrategy",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/InterestFilterStrategy.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
+          "module": "./MediatorStrategy",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/MediatorStrategy.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
+          "module": "./ObserverStrategy",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/ObserverStrategy.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        },
+        {
+          "module": "./PubSubStrategy",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/PubSubStrategy.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "dependents": [
+        "src/websocket/WebSocketContext.js"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/websocket/InterestFilterStrategy.js",
+      "dependencies": [
+        {
+          "module": "./DistributionStrategy",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/DistributionStrategy.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "dependents": [
+        "src/websocket/strategies.config.js"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/websocket/DistributionStrategy.js",
+      "dependencies": [],
+      "dependents": [
+        "src/websocket/InterestFilterStrategy.js",
+        "src/websocket/MediatorStrategy.js",
+        "src/websocket/ObserverStrategy.js",
+        "src/websocket/PubSubStrategy.js"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/websocket/MediatorStrategy.js",
+      "dependencies": [
+        {
+          "module": "./DistributionStrategy",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/DistributionStrategy.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "dependents": [
+        "src/websocket/strategies.config.js"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/websocket/ObserverStrategy.js",
+      "dependencies": [
+        {
+          "module": "./DistributionStrategy",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/DistributionStrategy.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "dependents": [
+        "src/websocket/strategies.config.js"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/websocket/PubSubStrategy.js",
+      "dependencies": [
+        {
+          "module": "./DistributionStrategy",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/DistributionStrategy.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "dependents": [
+        "src/websocket/strategies.config.js"
+      ],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/services/notifications/observerNotifier.js",
+      "dependencies": [
+        {
+          "module": "../../websocket/WebSocketContext",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/WebSocketContext.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "dependents": [],
+      "orphan": false,
+      "valid": true
+    },
+    {
+      "source": "src/services/notifications/pubsubNotifier.js",
+      "dependencies": [
+        {
+          "module": "../../websocket/WebSocketContext",
+          "moduleSystem": "cjs",
+          "dynamic": false,
+          "exoticallyRequired": false,
+          "dependencyTypes": [
+            "local",
+            "require"
+          ],
+          "resolved": "src/websocket/WebSocketContext.js",
+          "coreModule": false,
+          "followable": true,
+          "couldNotResolve": false,
+          "matchesDoNotFollow": false,
+          "circular": false,
+          "valid": true
+        }
+      ],
+      "dependents": [],
+      "orphan": false,
+      "valid": true
+    }
+  ],
+  "summary": {
+    "violations": [],
+    "error": 0,
+    "warn": 0,
+    "info": 0,
+    "ignore": 0,
+    "totalCruised": 10,
+    "totalDependenciesCruised": 12,
+    "optionsUsed": {
+      "baseDir": "/home/claudia/BPP_Fitnesskurse/fitnesskurse-backend",
+      "combinedDependencies": false,
+      "detectJSDocImports": false,
+      "exoticRequireStrings": [],
+      "externalModuleResolutionStrategy": "node_modules",
+      "includeOnly": "^src/services/notifications/.*Notifier\\.js|^src/websocket/.*\\.js",
+      "metrics": false,
+      "moduleSystems": [
+        "es6",
+        "cjs",
+        "tsd",
+        "amd"
+      ],
+      "outputTo": "-",
+      "outputType": "json",
+      "preserveSymlinks": false,
+      "skipAnalysisNotInRules": false,
+      "tsPreCompilationDeps": false,
+      "args": "src"
+    }
+  }
+}

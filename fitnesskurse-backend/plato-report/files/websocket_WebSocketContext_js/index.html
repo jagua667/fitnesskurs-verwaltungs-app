@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Plato - websocket/WebSocketContext.js</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="../../assets/css/vendor/morris.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/bootstrap.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/font-awesome.css" rel="stylesheet">
+  <link href="../../assets/css/vendor/codemirror.css" rel="stylesheet">
+  <link href="../../assets/css/plato.css" rel="stylesheet">
+  <link href="../../assets/css/plato-file.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div class="navbar navbar-fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="http://github.com/es-analysis/plato">Plato on Github</a>
+    <ul class="nav navbar-nav">
+      <li>
+        <a href="../../index.html">Report Home</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h1>websocket/WebSocketContext.js</h1>
+  </div>
+</div>
+
+<div class="container aggregate-stats">
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Maintainability <a href="http://blogs.msdn.com/b/codeanalysis/archive/2007/11/20/maintainability-index-range-and-meaning.aspx"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="A value between 0 and 100 that represents the relative ease of maintaining the code. A high value means better maintainability." data-original-title="Maintainability Index"  data-container="body"></i></a></h2>
+      <p class="stat">71.41</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Lines of code <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h2>
+      <p class="stat">165</p>
+    </div>
+  </div>
+  <div class="row historical">
+    <div class="col-md-6">
+      <p id="chart_historical_maint" class="chart"></p>
+    </div>
+    <div class="col-md-6">
+      <p id="chart_historical_sloc" class="chart"></p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h2 class="header">Difficulty  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="The difficulty measure is related to the difficulty of the program to write or understand." data-original-title="Difficulty" data-container="body"></i></a></h2>
+      <p class="stat">23.22</p>
+    </div>
+    <div class="col-md-6">
+      <h2 class="header">Estimated Errors  <a href="http://en.wikipedia.org/wiki/Halstead_complexity_measures"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Halstead's delivered bugs is an estimate for the number of errors in the implementation." data-original-title="Delivered Bugs" data-container="body"></i></a></h2>
+      <p class="stat">0.72</p>
+    </div>
+  </div>
+</div>
+
+<div class="container charts">
+  <div class="row">
+    <h2 class="header">Function weight</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <h3 class="chart-header">By Complexity <a href="http://en.wikipedia.org/wiki/Cyclomatic_complexity"><i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="This metric counts the number of distinct paths through a block of code. Lower values are better." data-original-title="Cyclomatic Complexity" data-container="body"></i></a></h3>
+      <div id="fn-by-complexity" class="stat"></div>
+    </div>
+    <div class="col-md-6">
+      <h3 class="chart-header">By SLOC  <i class="icon icon-info-sign" rel="popover" data-placement="top" data-trigger="hover" data-content="Source Lines of Code / Logical Lines of Code" data-original-title="SLOC/LSLOC" data-container="body"></i></h3>
+      <div id="fn-by-sloc" class="stat"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <textarea id="file-source" class="col-md-12">/**
+ * @file WebSocketContext.js
+ * @description Der Kontext des Strategy Patterns. Initialisiert den Socket.IO-Server,
+ * lädt die aktive Verteilungsstrategie und leitet Client-Verbindungen und
+ * ausgehende Nachrichten an diese Strategie weiter.
+ */
+
+const { Server } = require(&#039;socket.io&#039;);
+const { getActiveStrategyClass, ACTIVE_STRATEGY_KEY } = require(&#039;./strategies.config&#039;);
+
+class WebSocketContext {
+    // Statische Property, um die Singleton-Instanz zu halten
+    static instance = null;
+
+    /**
+     * Privater Konstruktor für das Singleton-Muster.
+     */
+    constructor() {
+        if (WebSocketContext.instance) {
+            return WebSocketContext.instance;
+        }
+
+        // Allgemeine Socket.IO-Instanz
+        this.io = null;
+        // Die aktuell aktive Strategie-Instanz (z.B. ObserverStrategy)
+        this.activeStrategy = null;
+
+        WebSocketContext.instance = this;
+    }
+
+    /**
+     * Initialisiert den Socket.IO-Server und lädt die Strategie.
+     * Muss beim Start des HTTP-Servers aufgerufen werden.
+     * @param {object} httpServer - Die Instanz des HTTP-Servers (von Express).
+     */
+    init(httpServer) {
+        if (this.io) {
+            console.warn(&#039;WebSocketContext wurde bereits initialisiert.&#039;);
+            return;
+        }
+
+        // 1. Socket.IO Server initialisieren
+        this.io = new Server(httpServer, {
+            // CORS-Einstellungen sind wichtig, da Front- und Backend oft auf verschiedenen Ports laufen
+            cors: {
+                origin: &quot;*&quot;, // Ersetzen Sie dies später durch die tatsächliche URL Ihres Frontends!
+                methods: [&quot;GET&quot;, &quot;POST&quot;]
+            },
+            // Optionale weitere Konfiguration (z.B. Timeout, Pfad etc.)
+        });
+
+        // 2. Aktive Strategieklasse laden und instanziieren
+        const StrategyClass = getActiveStrategyClass();
+        this.activeStrategy = new StrategyClass(this.io);
+
+        console.log(`[WS] WebSocketContext gestartet mit Strategie: ${ACTIVE_STRATEGY_KEY}`);
+
+        // 3. Verbindungshandling definieren
+        this.io.on(&#039;connection&#039;, (clientSocket) =&gt; {
+            console.log(`[WS] Neuer Client verbunden. ID: ${clientSocket.id}`);
+
+            // Registriere den neuen Client bei der aktiven Strategie (Strategy-Muster-Aufruf)
+            // wenn Client userId via handshake.auth übergibt (z.B. client.connect({ auth: { userId } }))
+            if (clientSocket.handshake &amp;&amp; clientSocket.handshake.auth &amp;&amp; clientSocket.handshake.auth.userId) {
+                clientSocket.userId = clientSocket.handshake.auth.userId;
+            }
+            this.activeStrategy.registerClient(clientSocket);
+
+            // Optional: Client-Disconnect-Handling
+            clientSocket.on(&#039;disconnect&#039;, () =&gt; {
+                console.log(`[WS] Client getrennt. ID: ${clientSocket.id}`);
+                // Hinweis: Strategien müssen das Unregister-Handling in &#039;registerClient&#039; 
+                // oder einer separaten Methode selbst implementieren, falls nötig.
+            });
+        });
+    }
+
+    /**
+     * Methode, die spezifisch für Kurs-Updates mit Zustandsinformationen aufgerufen wird.
+     * Diese Methode wird vom bookingController aufgerufen.
+     * Leitet die Benachrichtigung an die aktive Strategie weiter, die die rollenbasierte Filterung übernimmt.
+     * @param {object} filterData - Enthält { updatedCourse, oldSpots, newSpots }
+     */
+    notifyCourseUpdate(filterData) {
+        if (!this.activeStrategy) {
+            console.error(&#039;[WS ERROR] notifyCourseUpdate aufgerufen, bevor die Strategie initialisiert wurde.&#039;);
+            return;
+        }
+
+        // Leitet den Aufruf an die aktive Strategie weiter, die für die rollenbasierte Filterung zuständig ist.
+        // Die Strategie MUSS diese neue Methode implementieren.
+        if (typeof this.activeStrategy.notifyCourseUpdate === &#039;function&#039;) {
+            this.activeStrategy.notifyCourseUpdate(filterData);
+        } else {
+            // Führe das Mapping hier durch, falls die Strategie die neue Methode nicht implementiert.
+            console.warn(&#039;[WS WARN] Die aktive Strategie implementiert notifyCourseUpdate nicht. Nachrichten werden ungefiltert gesendet!&#039;);
+
+            // Mappe die Manager-Daten ({updatedCourse: {title, ...}, newSpots}) in das Client-Format ({courseTitle, seatsAvailable}).
+            const clientPayload = {
+                courseTitle: filterData.updatedCourse.title,
+                seatsAvailable: filterData.newSpots,
+                courseId: filterData.updatedCourse.id // Füge die ID hinzu, falls sie im Client benötigt wird
+            };
+
+            this.activeStrategy.distributeMessage(&#039;course_updated&#039;, clientPayload);
+        }
+    }
+
+    /**
+     * Methode, die von der Geschäftslogik (z.B. CourseController) aufgerufen wird, 
+     * um eine Nachricht zu verteilen.
+     * @param {string} eventName - Der Name des Ereignisses (z.B. &#039;course_updated&#039;).
+     * @param {object} payload - Die zu sendenden Daten.
+     */
+    distributeMessage(eventName, payload) {
+        if (!this.activeStrategy) {
+            console.error(&#039;[WS ERROR] distributeMessage aufgerufen, bevor die Strategie initialisiert wurde.&#039;);
+            return;
+        }
+
+        // Leitet den Aufruf an die aktuell aktive Strategie weiter
+        this.activeStrategy.distributeMessage(eventName, payload);
+    }
+
+    /**
+     * Gibt die Singleton-Instanz zurück.
+     */
+    static getInstance() {
+        if (!WebSocketContext.instance) {
+            return new WebSocketContext();
+        }
+        return WebSocketContext.instance;
+    }
+
+    /**
+     * Gibt die aktive Strategie-Instanz zurück (z.B. nützlich für Unit Tests).
+     */
+    getActiveStrategy() {
+        return this.activeStrategy;
+    }
+
+    /**
+     * Gibt alle aktiven Benutzer-IDs zurück (z. B. für Benachrichtigungen über verfügbare Kurse)
+     */
+    getActiveUserIds() {
+        if (!this.io) {
+            console.warn(&#039;[WS WARN] getActiveUserIds aufgerufen, aber io ist nicht initialisiert.&#039;);
+            return [];
+        }
+
+        // Zugriff auf alle verbundenen Sockets
+        const connectedSockets = Array.from(this.io.sockets.sockets.values());
+
+        // Falls du bei der Verbindung die userId mitgibst (z. B. clientSocket.userId)
+        const userIds = connectedSockets
+            .map(socket =&gt; socket.userId)
+            .filter(Boolean); // Nur echte IDs
+
+        return userIds;
+    }
+
+}
+
+// Exportiere die Singleton-Instanz
+module.exports = WebSocketContext.getInstance();</textarea>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p>.</p>
+  </div>
+</footer>
+
+<script type="text/html" id="complexity-popover-template">
+  <div class="complexity-notice">
+    Complexity : {{ cyclomatic }} <br>
+    Length : {{ halstead.length }} <br>
+    Difficulty : {{ halstead.difficulty.toFixed(2) }} <br>
+    Est # bugs : {{ halstead.bugs.toFixed(2) }}<br>
+  </div>
+</script>
+
+<script type="text/javascript" src="../../assets/scripts/bundles/core-bundle.js"></script>
+<script type="text/javascript" src="../../assets/scripts/bundles/codemirror.js"></script>
+<script type="text/javascript" src="../../assets/scripts/codemirror.markpopovertext.js"></script>
+<script type="text/javascript" src="report.js"></script>
+<script type="text/javascript" src="report.history.js"></script>
+<script type="text/javascript" src="../../assets/scripts/plato-file.js"></script>
+</body>
+</html>

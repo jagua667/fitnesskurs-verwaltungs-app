@@ -87,8 +87,7 @@ class WebSocketContext {
             return;
         }
 
-        // Leitet den Aufruf an die aktive Strategie weiter, die für die rollenbasierte Filterung zuständig ist.
-        // Die Strategie MUSS diese neue Methode implementieren.
+        // REVIEW:ENTRY – Kursstatus-Nachricht aus Domäne empfangen; Delegation an aktive StrategyI
         if (typeof this.activeStrategy.notifyCourseUpdate === 'function') {
             this.activeStrategy.notifyCourseUpdate(filterData);
         } else {
@@ -102,6 +101,7 @@ class WebSocketContext {
                 courseId: filterData.updatedCourse.id // Füge die ID hinzu, falls sie im Client benötigt wird
             };
 
+            // REVIEW:ENTRY – Fallback: direkte Delegation auf generische Verteilung
             this.activeStrategy.distributeMessage('course_updated', clientPayload);
         }
     }
@@ -118,7 +118,7 @@ class WebSocketContext {
             return;
         }
 
-        // Leitet den Aufruf an die aktuell aktive Strategie weiter
+        // REVIEW:ENTRY – generischer Nachrichteneingang; Delegation an aktuelle Strategy
         this.activeStrategy.distributeMessage(eventName, payload);
     }
 

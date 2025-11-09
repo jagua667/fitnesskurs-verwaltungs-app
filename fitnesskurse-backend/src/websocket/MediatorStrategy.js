@@ -20,7 +20,7 @@ class MediatorStrategy extends DistributionStrategy {
      */
     registerClient(clientSocket) {
         this.participants.add(clientSocket);
-        
+
         // Entferne den Client, wenn die Verbindung getrennt wird
         clientSocket.on('disconnect', () => {
             this.participants.delete(clientSocket);
@@ -30,16 +30,17 @@ class MediatorStrategy extends DistributionStrategy {
     }
 
     /**
-     * Der Mediator empfängt die System-Nachricht und entscheidet, wohin sie verteilt wird.
-     * Im einfachsten Fall werden alle Teilnehmer benachrichtigt.
-     * @param {string} eventName - Der Name des Ereignisses.
-     * @param {object} payload - Die zu sendenden Daten.
-     */
+  * Der Mediator empfängt die System-Nachricht und entscheidet, wohin sie verteilt wird.
+  * Im einfachsten Fall werden alle Teilnehmer benachrichtigt.
+  * @param {string} eventName - Der Name des Ereignisses.
+  * @param {object} payload - Die zu sendenden Daten.
+  */
+    // REVIEW:DISPATCH – zentrale Verteilung durch den Mediator an alle Teilnehmer
     distributeMessage(eventName, payload) {
         // Kern der Mediator-Logik: Die zentrale Instanz sendet an alle bekannten Teilnehmer.
         this.participants.forEach(clientSocket => {
             // Optional könnte hier Logik stehen: if (clientSocket.userRole === 'Admin') send;
-            clientSocket.emit(eventName, payload); 
+            clientSocket.emit(eventName, payload);
         });
     }
 }

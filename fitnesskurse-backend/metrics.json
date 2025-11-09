@@ -1,0 +1,273 @@
+{
+  "generatedAt": "2025-11-02T03:07:58.812Z",
+  "rows": [
+    {
+      "bucket": "websocket",
+      "file": "src/websocket/DistributionStrategy.js",
+      "cyclomatic": 1,
+      "cognitive_complexity": 0,
+      "ncloc": 12,
+      "code_smells": 0,
+      "bugs": 0,
+      "vulnerabilities": 0,
+      "duplicated_lines_density": 0,
+      "cbo": 0,
+      "cohesion_proxy": 0
+    },
+    {
+      "bucket": "websocket",
+      "file": "src/websocket/InterestFilterStrategy.js",
+      "cyclomatic": 6,
+      "cognitive_complexity": 5,
+      "ncloc": 37,
+      "code_smells": 2,
+      "bugs": 0,
+      "vulnerabilities": 0,
+      "duplicated_lines_density": 0,
+      "cbo": 1,
+      "cohesion_proxy": 1
+    },
+    {
+      "bucket": "notifications",
+      "file": "src/services/notifications/mediatorNotifier.js",
+      "cyclomatic": 11,
+      "cognitive_complexity": 13,
+      "ncloc": 95,
+      "code_smells": 3,
+      "bugs": 0,
+      "vulnerabilities": 0,
+      "duplicated_lines_density": 0,
+      "cbo": 1,
+      "cohesion_proxy": 1
+    },
+    {
+      "bucket": "websocket",
+      "file": "src/websocket/MediatorStrategy.js",
+      "cyclomatic": 1,
+      "cognitive_complexity": 0,
+      "ncloc": 21,
+      "code_smells": 1,
+      "bugs": 0,
+      "vulnerabilities": 0,
+      "duplicated_lines_density": 0,
+      "cbo": 1,
+      "cohesion_proxy": 1
+    },
+    {
+      "bucket": "notifications",
+      "file": "src/services/notifications/observerNotifier.js",
+      "cyclomatic": 8,
+      "cognitive_complexity": 16,
+      "ncloc": 59,
+      "code_smells": 2,
+      "bugs": 0,
+      "vulnerabilities": 0,
+      "duplicated_lines_density": 0,
+      "cbo": 1,
+      "cohesion_proxy": 1
+    },
+    {
+      "bucket": "websocket",
+      "file": "src/websocket/ObserverStrategy.js",
+      "cyclomatic": 1,
+      "cognitive_complexity": 0,
+      "ncloc": 22,
+      "code_smells": 5,
+      "bugs": 0,
+      "vulnerabilities": 0,
+      "duplicated_lines_density": 0,
+      "cbo": 1,
+      "cohesion_proxy": 1
+    },
+    {
+      "bucket": "notifications",
+      "file": "src/services/notifications/pubsubNotifier.js",
+      "cyclomatic": 9,
+      "cognitive_complexity": 12,
+      "ncloc": 77,
+      "code_smells": 3,
+      "bugs": 0,
+      "vulnerabilities": 0,
+      "duplicated_lines_density": 0,
+      "cbo": 1,
+      "cohesion_proxy": 1
+    },
+    {
+      "bucket": "websocket",
+      "file": "src/websocket/PubSubStrategy.js",
+      "cyclomatic": 2,
+      "cognitive_complexity": 1,
+      "ncloc": 21,
+      "code_smells": 2,
+      "bugs": 0,
+      "vulnerabilities": 0,
+      "duplicated_lines_density": 0,
+      "cbo": 1,
+      "cohesion_proxy": 1
+    },
+    {
+      "bucket": "websocket",
+      "file": "src/websocket/strategies.config.js",
+      "cyclomatic": 3,
+      "cognitive_complexity": 1,
+      "ncloc": 22,
+      "code_smells": 0,
+      "bugs": 0,
+      "vulnerabilities": 0,
+      "duplicated_lines_density": 0,
+      "cbo": 4,
+      "cohesion_proxy": 1
+    },
+    {
+      "bucket": "websocket",
+      "file": "src/websocket/WebSocketContext.js",
+      "cyclomatic": 11,
+      "cognitive_complexity": 11,
+      "ncloc": 83,
+      "code_smells": 2,
+      "bugs": 0,
+      "vulnerabilities": 0,
+      "duplicated_lines_density": 0,
+      "cbo": 1,
+      "cohesion_proxy": 1
+    }
+  ],
+  "summary": [
+    {
+      "bucket": "websocket",
+      "cyclomatic_mean": 3.5714285714285716,
+      "cyclomatic_median": 2,
+      "cyclomatic_top3_files": [
+        {
+          "file": "src/websocket/WebSocketContext.js",
+          "cyclomatic": 11
+        },
+        {
+          "file": "src/websocket/InterestFilterStrategy.js",
+          "cyclomatic": 6
+        },
+        {
+          "file": "src/websocket/strategies.config.js",
+          "cyclomatic": 3
+        }
+      ],
+      "ccog_mean": 2.5714285714285716,
+      "ccog_median": 1,
+      "ccog_top3_files": [
+        {
+          "file": "src/websocket/WebSocketContext.js",
+          "ccog": 11
+        },
+        {
+          "file": "src/websocket/InterestFilterStrategy.js",
+          "ccog": 5
+        },
+        {
+          "file": "src/websocket/PubSubStrategy.js",
+          "ccog": 1
+        }
+      ],
+      "cbo_mean": 1.2857142857142858,
+      "cbo_median": 1,
+      "cbo_top3_files": [
+        {
+          "file": "src/websocket/strategies.config.js",
+          "cbo": 4
+        },
+        {
+          "file": "src/websocket/InterestFilterStrategy.js",
+          "cbo": 1
+        },
+        {
+          "file": "src/websocket/MediatorStrategy.js",
+          "cbo": 1
+        }
+      ],
+      "cohesion_proxy_top_outliers": [
+        {
+          "file": "src/websocket/InterestFilterStrategy.js",
+          "cohesion_proxy": 1
+        },
+        {
+          "file": "src/websocket/MediatorStrategy.js",
+          "cohesion_proxy": 1
+        },
+        {
+          "file": "src/websocket/ObserverStrategy.js",
+          "cohesion_proxy": 1
+        }
+      ],
+      "smells_total": 12,
+      "ncloc_total": 218,
+      "smells_per_kloc": 55.04587155963303
+    },
+    {
+      "bucket": "notifications",
+      "cyclomatic_mean": 9.333333333333334,
+      "cyclomatic_median": 9,
+      "cyclomatic_top3_files": [
+        {
+          "file": "src/services/notifications/mediatorNotifier.js",
+          "cyclomatic": 11
+        },
+        {
+          "file": "src/services/notifications/pubsubNotifier.js",
+          "cyclomatic": 9
+        },
+        {
+          "file": "src/services/notifications/observerNotifier.js",
+          "cyclomatic": 8
+        }
+      ],
+      "ccog_mean": 13.666666666666666,
+      "ccog_median": 13,
+      "ccog_top3_files": [
+        {
+          "file": "src/services/notifications/observerNotifier.js",
+          "ccog": 16
+        },
+        {
+          "file": "src/services/notifications/mediatorNotifier.js",
+          "ccog": 13
+        },
+        {
+          "file": "src/services/notifications/pubsubNotifier.js",
+          "ccog": 12
+        }
+      ],
+      "cbo_mean": 1,
+      "cbo_median": 1,
+      "cbo_top3_files": [
+        {
+          "file": "src/services/notifications/mediatorNotifier.js",
+          "cbo": 1
+        },
+        {
+          "file": "src/services/notifications/observerNotifier.js",
+          "cbo": 1
+        },
+        {
+          "file": "src/services/notifications/pubsubNotifier.js",
+          "cbo": 1
+        }
+      ],
+      "cohesion_proxy_top_outliers": [
+        {
+          "file": "src/services/notifications/mediatorNotifier.js",
+          "cohesion_proxy": 1
+        },
+        {
+          "file": "src/services/notifications/observerNotifier.js",
+          "cohesion_proxy": 1
+        },
+        {
+          "file": "src/services/notifications/pubsubNotifier.js",
+          "cohesion_proxy": 1
+        }
+      ],
+      "smells_total": 8,
+      "ncloc_total": 231,
+      "smells_per_kloc": 34.63203463203463
+    }
+  ]
+}
