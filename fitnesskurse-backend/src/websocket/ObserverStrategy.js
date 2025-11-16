@@ -34,10 +34,10 @@ class ObserverStrategy extends DistributionStrategy {
     }
 
     /**
- * Verteilt die Nachricht, indem alle registrierten Observer direkt iteriert werden.
- * @param {string} eventName - Der Name des Ereignisses.
- * @param {object} payload - Die zu sendenden Daten.
- */
+     * Verteilt die Nachricht, indem alle registrierten Observer direkt iteriert werden.
+     * @param {string} eventName - Der Name des Ereignisses.
+     * @param {object} payload - Die zu sendenden Daten.
+     */
     // REVIEW:DISPATCH – Event an alle registrierten Observer senden (direktes emit)I
     distributeMessage(eventName, payload) {
         const messageCount = this.observers.size;
